@@ -34,6 +34,7 @@ def training(images, labels):
 	train_acc_op = model.evaluation(train_logits, label_batch)
 
 	logs_dir = vars(FLAGS)['log_dir']
+	max_step = vars(FLAGS)['max_step']
 
 	if not os.path.exists(logs_dir):
 		os.mkdir(logs_dir)
@@ -48,7 +49,7 @@ def training(images, labels):
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 	try:
-		for step in range(MAX_STEP):
+		for step in range(max_step):
 			if coord.should_stop():
 				break
 			_, tra_loss, tra_acc = sess.run([train_op, train_loss, train_acc_op])
@@ -93,5 +94,7 @@ if __name__ == '__main__':
                       help='Directory for storing input data')
 	parser.add_argument('--log_dir', type=str, default=LOG_DIR,
                       help='Directory for storing logs data')
+	parser.add_argument('--max_step', type=int, default=MAX_STEP,
+                      help='Max steps for trainning')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
