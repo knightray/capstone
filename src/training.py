@@ -11,24 +11,20 @@ import data_processing
 import model
 import sys
 import os
+import define
 
 FLAGS = None
 
-IMAGE_W = 200
-IMAGE_H = 200
 BATCH_SIZE = 8
 MAX_STEP = 10000
-N_CLASSES = 2
 LEARNING_RATE = 0.0001
-DATA_DIR = '/Users/zhangchengke/ml/capstone/data/oxford-pet/'
-LOG_DIR = '/Users/zhangchengke/ml/capstone/logs/'
 
 def training(images, labels):
 
-	image_batch, label_batch = data_processing.get_batches(images, labels, BATCH_SIZE, IMAGE_W, IMAGE_H)
+	image_batch, label_batch = data_processing.get_batches(images, labels, BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
 	print("image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch))
-	train_logits = model.inference(image_batch, BATCH_SIZE, N_CLASSES)
+	train_logits = model.inference(image_batch, BATCH_SIZE, define.N_CLASSES)
 	train_loss = model.losses(train_logits, label_batch)
 	train_op = model.trainning(train_loss, LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, label_batch)
@@ -90,9 +86,9 @@ def main(_):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--data_dir', type=str, default=DATA_DIR,
+	parser.add_argument('--data_dir', type=str, default=define.DATA_DIR,
                       help='Directory for storing input data')
-	parser.add_argument('--log_dir', type=str, default=LOG_DIR,
+	parser.add_argument('--log_dir', type=str, default=define.LOG_DIR,
                       help='Directory for storing logs data')
 	parser.add_argument('--max_step', type=int, default=MAX_STEP,
                       help='Max steps for trainning')

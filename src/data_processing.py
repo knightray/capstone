@@ -12,19 +12,10 @@ import sys
 import os
 import numpy as np
 import tensorflow as tf
+import define
 
-DATA_DIR = '/Users/zhangchengke/ml/capstone/data/oxford-pet/'
-LOG_DIR = ''
 FLAGS = None
 TRAINING_IMAGE_PERCENT = 0.8
-
-class ImageInfo:
-
-	def __init__(self):
-		self.species = None
-		self.file_name = ""
-
-
 
 def get_files_from_oxford_pet_dataset(data_dir):
 	'''
@@ -147,7 +138,7 @@ def main(_):
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--data_dir', type=str, default=DATA_DIR,
+	parser.add_argument('--data_dir', type=str, default=define.DATA_DIR,
                       help='Directory for storing input data')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
