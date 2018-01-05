@@ -20,18 +20,41 @@ def load_model(log_dir, sess):
 	saver = tf.train.import_meta_graph('%s/model.ckpt-10000.meta' % log_dir)
 	saver.restore(sess, '%s/model.ckpt-10000' % log_dir)
 
-def test_given_image2(log_dir, image_file):
+def get_test_image(image_file):
+	image = tf.image.decode_jpeg(tf.read_file(image_file), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
+	image = tf.image.resize_image_with_crop_or_pad(image, define.IMAGE_W, define.IMAGE_H)
+	#images = tf.image.per_image_standardization(images)
+	image = tf.cast(image, tf.float32)
+	image = tf.reshape(image, [1, define.IMAGE_W, define.IMAGE_H, 3])
+	return image
+
+def read_images(images_list):
+    
+	images_array = None
+	for image_file in images_list:
+		im = Image.open(image_file)
+		im = im.resize([define.IMAGE_W, define.IMAGE_H])
+		image_data = np.array(im)
+		image = tf.cast(image_data, tf.float32)
+		image = tf.image.per_image_standardization(image)   
+
+		if (images_array == None):
+			images_array = image
+		else:
+			images_array = tf.concat([images_array, image], 0)
+
+	images_array = tf.reshape(images_array, [-1, define.IMAGE_W, define.IMAGE_H, 3])        
+	print("images_array = %s" % images_array.shape)
+	return images_array
+
+def test_for_test_data(log_dir, images_list, labels_list):
 
 	with tf.Graph().as_default():
-		BATCH_SIZE = 1
+		BATCH_SIZE = len(images_list)
 		N_CLASSES = 2
-	
-		image = tf.image.decode_jpeg(tf.read_file(image_file), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
-		image = tf.image.resize_image_with_crop_or_pad(image, define.IMAGE_W, define.IMAGE_H)
-		image = tf.image.per_image_standardization(image)
-		image = tf.reshape(image, [1, define.IMAGE_W, define.IMAGE_H, 3])
-		logit = model.inference(image, BATCH_SIZE, N_CLASSES)
 
+		image_batch = read_images(images_list)
+		logit = model.inference(image_batch, BATCH_SIZE, N_CLASSES)
 		logit = tf.nn.softmax(logit)
 
 		logs_train_dir = log_dir
@@ -49,15 +72,15 @@ def test_given_image2(log_dir, image_file):
 				print('No checkpoint file found')
 
 			prediction = sess.run(logit)
-			max_index = np.argmax(prediction)
-			if max_index==0:
-				print('This is a cat with possibility %.6f' %prediction[:, 0])
-			else:
-				print('This is a dog with possibility %.6f' %prediction[:, 1])	
+			for image_file, p in zip(images_list, prediction):
+				max_index = np.argmax(p)
+				if max_index==0:
+					print('%s is a cat with possibility %.6f' %(image_file, p[0]))
+				else:
+					print('%s is a dog with possibility %.6f' %(image_file, p[1]))	
 
-def test_given_image(log_dir, image_file):
+def test_for_given_image(log_dir, image_file):
 
-	print("log_dir=%s, image_file=%s" % (log_dir, image_file))
 	im = Image.open(image_file)
 	im = im.resize([define.IMAGE_W, define.IMAGE_H])
 	image_array = np.array(im)
@@ -101,8 +124,14 @@ def main(_):
 	log_dir = vars(FLAGS)['log_dir']
 	test_image = vars(FLAGS)['test_image']
 
-	test_given_image2(log_dir, test_image)
+	#test_for_given_image(log_dir, test_image)
+	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
+	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg']
+	#test_labels_list = [1, 1]
+	#test_labels_list = [1]
 
+	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_oxford_pet_dataset(define.DATA_DIR)
+	test_for_test_data(log_dir, test_images_list, test_labels_list)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()

@@ -15,7 +15,7 @@ import tensorflow as tf
 import define
 
 FLAGS = None
-TRAINING_IMAGE_PERCENT = 0.8
+TRAINING_IMAGE_PERCENT = 0.99
 
 def get_files_from_oxford_pet_dataset(data_dir):
 	'''
@@ -86,6 +86,7 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height)
 	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	#images = tf.image.per_image_standardization(images)
 
+	print("get_batches():images.shape=%s" % images.shape)
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 64)
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)
