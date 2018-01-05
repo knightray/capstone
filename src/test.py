@@ -36,7 +36,7 @@ def read_images(images_list):
 		im = im.resize([define.IMAGE_W, define.IMAGE_H])
 		image_data = np.array(im)
 		image = tf.cast(image_data, tf.float32)
-		image = tf.image.per_image_standardization(image)   
+		#image = tf.image.per_image_standardization(image)   
 
 		if (images_array == None):
 			images_array = image
