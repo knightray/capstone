@@ -47,6 +47,23 @@ def read_images(images_list):
 	print("images_array = %s" % images_array.shape)
 	return images_array
 
+def is_dog_or_cat(label):
+	return 'cat' if label == 0 else 'dog'
+
+def get_accurcy(images, labels, predictions):
+
+	accurcy = 0.0
+	for image, label, p in zip(images, labels, predictions):
+		accurcy += p[label]
+		max_index = np.argmax(p)
+		if label == max_index:
+			print("%s [OK][%s] - with possibility %.6f" % (image, is_dog_or_cat(label), p[max_index]))
+		else:
+			print("%s [NG][%s] - with possibility %.6f" % (image, is_dog_or_cat(label), p[max_index]))
+
+	print("****** AVERAGE ACCURCY = %.6f *******" % (accurcy / len(images)))
+
+
 def test_for_test_data(log_dir, images_list, labels_list):
 
 	with tf.Graph().as_default():
@@ -71,13 +88,8 @@ def test_for_test_data(log_dir, images_list, labels_list):
 			else:
 				print('No checkpoint file found')
 
-			prediction = sess.run(logit)
-			for image_file, p in zip(images_list, prediction):
-				max_index = np.argmax(p)
-				if max_index==0:
-					print('%s is a cat with possibility %.6f' %(image_file, p[0]))
-				else:
-					print('%s is a dog with possibility %.6f' %(image_file, p[1]))	
+			predictions = sess.run(logit)
+			get_accurcy(images_list, labels_list, predictions)
 
 def test_for_given_image(log_dir, image_file):
 
