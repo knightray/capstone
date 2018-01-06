@@ -15,7 +15,26 @@ import tensorflow as tf
 import define
 
 FLAGS = None
-TRAINING_IMAGE_PERCENT = 0.99
+TRAINING_IMAGE_PERCENT = 0.8
+
+def load_list(file_name):
+	images = []
+	labels = []
+
+	f = open(file_name, 'r')
+	lines = f.readlines()
+	for line in lines:
+		tokens = line.split(',')
+		images.append(tokens[0])
+		labels.append(int(tokens[1]))
+	f.close()
+	return images, labels
+
+def save_list(images, labels, file_name):
+	f = open(file_name, 'w')
+	for image, label in zip(images, labels):
+		f.write("%s,%d\n" % (image, label))
+	f.close()
 
 def get_files_from_oxford_pet_dataset(data_dir):
 	'''
@@ -80,13 +99,12 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height)
 
 	input_queue = tf.train.slice_input_producer([images, labels])
 	labels = input_queue[1]
-	print("decode jpeg %s" % input_queue[0])
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 
 	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
-	#images = tf.image.per_image_standardization(images)
+	images = tf.image.per_image_standardization(images)
 
-	print("get_batches():images.shape=%s" % images.shape)
+	#print("get_batches():images.shape=%s" % images.shape)
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 64)
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)

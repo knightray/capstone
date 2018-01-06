@@ -23,7 +23,7 @@ def load_model(log_dir, sess):
 def get_test_image(image_file):
 	image = tf.image.decode_jpeg(tf.read_file(image_file), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 	image = tf.image.resize_image_with_crop_or_pad(image, define.IMAGE_W, define.IMAGE_H)
-	#images = tf.image.per_image_standardization(images)
+	images = tf.image.per_image_standardization(images)
 	image = tf.cast(image, tf.float32)
 	image = tf.reshape(image, [1, define.IMAGE_W, define.IMAGE_H, 3])
 	return image
@@ -36,7 +36,7 @@ def read_images(images_list):
 		im = im.resize([define.IMAGE_W, define.IMAGE_H])
 		image_data = np.array(im)
 		image = tf.cast(image_data, tf.float32)
-		#image = tf.image.per_image_standardization(image)   
+		image = tf.image.per_image_standardization(image)   
 
 		if (images_array == None):
 			images_array = image
@@ -44,11 +44,11 @@ def read_images(images_list):
 			images_array = tf.concat([images_array, image], 0)
 
 	images_array = tf.reshape(images_array, [-1, define.IMAGE_W, define.IMAGE_H, 3])        
-	print("images_array = %s" % images_array.shape)
+	#print("images_array = %s" % images_array.shape)
 	return images_array
 
 def is_dog_or_cat(label):
-	return 'cat' if label == 0 else 'dog'
+	return 'CAT' if label == 0 else 'DOG'
 
 def get_accurcy(images, labels, predictions):
 
@@ -57,11 +57,11 @@ def get_accurcy(images, labels, predictions):
 		accurcy += p[label]
 		max_index = np.argmax(p)
 		if label == max_index:
-			print("%s [OK][%s] - with possibility %.6f" % (image, is_dog_or_cat(label), p[max_index]))
+			print("%-40s [%s] - [OK] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
 		else:
-			print("%s [NG][%s] - with possibility %.6f" % (image, is_dog_or_cat(label), p[max_index]))
+			print("%-40s [%s] - [NG] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
 
-	print("****** AVERAGE ACCURCY = %.6f *******" % (accurcy / len(images)))
+	return accurcy
 
 
 def test_for_test_data(log_dir, images_list, labels_list):
@@ -89,7 +89,8 @@ def test_for_test_data(log_dir, images_list, labels_list):
 				print('No checkpoint file found')
 
 			predictions = sess.run(logit)
-			get_accurcy(images_list, labels_list, predictions)
+
+	return get_accurcy(images_list, labels_list, predictions)
 
 def test_for_given_image(log_dir, image_file):
 
@@ -142,8 +143,23 @@ def main(_):
 	#test_labels_list = [1, 1]
 	#test_labels_list = [1]
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_oxford_pet_dataset(define.DATA_DIR)
-	test_for_test_data(log_dir, test_images_list, test_labels_list)
+	test_data_list = log_dir + '/test_list.csv'
+	test_images_list, test_labels_list = data_processing.load_list(test_data_list)
+
+	accurcy = 0.0
+	batch_size = 8
+	image_cnt = len(test_images_list)
+	loop_cnt = int(image_cnt / batch_size)
+	if image_cnt % batch_size != 0:
+		loop_cnt += 1
+
+	for i in range(loop_cnt):
+		print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
+		image_batch = test_images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
+		label_batch = test_labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
+		accurcy += test_for_test_data(log_dir, image_batch, label_batch)
+
+	print("****** AVERAGE ACCURCY = %.6f *******" % (accurcy / image_cnt))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()

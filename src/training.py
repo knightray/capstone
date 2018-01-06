@@ -76,9 +76,15 @@ def test_by_one_image(image):
 def main(_):
 
 	data_dir = vars(FLAGS)['data_dir']
+	log_dir = vars(FLAGS)['log_dir']
 
 	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_oxford_pet_dataset(data_dir)	
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
+
+	train_data_list = log_dir + '/train_list.csv'
+	data_processing.save_list(train_images_list, train_labels_list, train_data_list)
+	test_data_list = log_dir + '/test_list.csv'
+	data_processing.save_list(test_images_list, test_labels_list, test_data_list)
 
 	print("do training...")
 	training(train_images_list, train_labels_list)
