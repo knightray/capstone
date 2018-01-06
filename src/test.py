@@ -53,15 +53,17 @@ def is_dog_or_cat(label):
 def get_accurcy(images, labels, predictions):
 
 	accurcy = 0.0
+	ok_cnt = 0
 	for image, label, p in zip(images, labels, predictions):
 		accurcy += p[label]
 		max_index = np.argmax(p)
 		if label == max_index:
 			print("%-40s [%s] - [OK] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
+			ok_cnt += 1
 		else:
 			print("%-40s [%s] - [NG] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
 
-	return accurcy
+	return accurcy, ok_cnt
 
 
 def test_for_test_data(log_dir, images_list, labels_list):
@@ -148,6 +150,7 @@ def main(_):
 
 	accurcy = 0.0
 	batch_size = 8
+	ok_cnt = 0
 	image_cnt = len(test_images_list)
 	loop_cnt = int(image_cnt / batch_size)
 	if image_cnt % batch_size != 0:
@@ -157,9 +160,11 @@ def main(_):
 		print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
 		image_batch = test_images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
 		label_batch = test_labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		accurcy += test_for_test_data(log_dir, image_batch, label_batch)
+		acc, okc =  test_for_test_data(log_dir, image_batch, label_batch)
+		accurcy += acc
+		ok_cnt += okc
 
-	print("****** AVERAGE ACCURCY = %.6f *******" % (accurcy / image_cnt))
+	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, TEST COUNT = %d  *******" % (accurcy / image_cnt, ok_cnt, image_cnt))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
