@@ -58,10 +58,10 @@ def get_accurcy(images, labels, predictions):
 		accurcy += p[label]
 		max_index = np.argmax(p)
 		if label == max_index:
-			print("%-40s [%s] - [OK] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
+			print("%-40s [%s] - [OK] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p))
 			ok_cnt += 1
 		else:
-			print("%-40s [%s] - [NG] - with possibility %.6f" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
+			print("%-40s [%s] - [NG] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p))
 
 	return accurcy, ok_cnt
 
@@ -149,7 +149,7 @@ def main(_):
 	test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
 	accurcy = 0.0
-	batch_size = 8
+	batch_size = 1
 	ok_cnt = 0
 	image_cnt = len(test_images_list)
 	loop_cnt = int(image_cnt / batch_size)
