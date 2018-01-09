@@ -15,18 +15,14 @@ import define
 
 FLAGS = None
 
-BATCH_SIZE = 8
-MAX_STEP = 10000
-LEARNING_RATE = 0.0001
-
 def training(images, labels):
 
-	image_batch, label_batch = data_processing.get_batches(images, labels, BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
+	image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
 	print("image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch))
-	train_logits = model.inference(image_batch, BATCH_SIZE, define.N_CLASSES)
+	train_logits = model.inference(image_batch, define.BATCH_SIZE, define.N_CLASSES)
 	train_loss = model.losses(train_logits, label_batch)
-	train_op = model.trainning(train_loss, LEARNING_RATE)
+	train_op = model.trainning(train_loss, define.LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, label_batch)
 
 	logs_dir = vars(FLAGS)['log_dir']
@@ -55,7 +51,7 @@ def training(images, labels):
 				summary_str = sess.run(summary_op)
 				train_writer.add_summary(summary_str, step)
 
-			if step % 2000 == 0 or (step + 1) == MAX_STEP:
+			if step % 2000 == 0 or (step + 1) == max_step:
 				checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
 				saver.save(sess, checkpoint_path, global_step=step)
 
@@ -78,7 +74,7 @@ def main(_):
 	data_dir = vars(FLAGS)['data_dir']
 	log_dir = vars(FLAGS)['log_dir']
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_oxford_pet_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_kaggle_dataset(data_dir)	
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	train_data_list = log_dir + '/train_list.csv'
@@ -96,7 +92,7 @@ if __name__ == '__main__':
                       help='Directory for storing input data')
 	parser.add_argument('--log_dir', type=str, default=define.LOG_DIR,
                       help='Directory for storing logs data')
-	parser.add_argument('--max_step', type=int, default=MAX_STEP,
+	parser.add_argument('--max_step', type=int, default=define.MAX_STEP,
                       help='Max steps for trainning')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
