@@ -16,10 +16,6 @@ import define
 
 FLAGS = None
 
-def load_model(log_dir, sess):
-	saver = tf.train.import_meta_graph('%s/model.ckpt-10000.meta' % log_dir)
-	saver.restore(sess, '%s/model.ckpt-10000' % log_dir)
-
 def get_test_image(image_file):
 	image = tf.image.decode_jpeg(tf.read_file(image_file), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 	image = tf.image.resize_image_with_crop_or_pad(image, define.IMAGE_W, define.IMAGE_H)
@@ -48,7 +44,7 @@ def read_images(images_list):
 	return images_array
 
 def is_dog_or_cat(label):
-	return 'CAT' if label == 0 else 'DOG'
+	return 'CAT' if label == define.CAT else 'DOG'
 
 def get_accurcy(images, labels, predictions):
 
