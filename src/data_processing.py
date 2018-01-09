@@ -15,7 +15,6 @@ import tensorflow as tf
 import define
 
 FLAGS = None
-TRAINING_IMAGE_PERCENT = 0.8
 
 def load_list(file_name):
 	images = []
@@ -36,14 +35,37 @@ def save_list(images, labels, file_name):
 		f.write("%s,%d\n" % (image, label))
 	f.close()
 
-def get_files_from_oxford_pet_dataset(data_dir):
-	'''
-	Args:
-		data_dir: directory of images data
-	Returns:
-		list of images and labels
-	'''
+def get_files_from_kaggle_dataset(data_dir):
+	images_dir = data_dir + 'train/'
 
+	images_list = []
+	labels_list = []
+	all_files = []
+
+	files = os.listdir(images_dir)
+	for f in files:
+		label_str = f.split(".")[0]
+		if label_str == 'cat':
+			labels_list.append(define.CAT)
+		elif label_str == 'dog':
+			labels_list.append(define.DOG)
+		else:
+			print("Error: unrecognized type = %s" % label_str)
+		images_list.append(images_dir + f)
+
+	tmp = np.array([images_list, labels_list])
+	tmp = tmp.transpose()
+	np.random.shuffle(tmp)
+
+	images_list = list(tmp[:, 0])
+	labels_list = list(tmp[:, 1])
+	labels_list = [int(l) for l in labels_list]
+
+	total_cnt = len(images_list)
+	train_cnt = int(total_cnt * define.TRAINING_IMAGE_PERCENT)
+	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt:], labels_list[train_cnt:]
+
+def get_files_from_oxford_pet_dataset(data_dir):
 	images_dir = 'images/'
 	labels_file = data_dir + 'annotations/list.txt'
 
@@ -87,7 +109,7 @@ def get_files_from_oxford_pet_dataset(data_dir):
 	# As the labels in the source data presents the classifcation like this 1: cat, 2: dog,
 	# we simply substract 1 from the original value so we can get the label as 0:cat 1:dog	
 	labels_list = [int(l) - 1 for l in labels_list]
-	train_cnt = int(len(images_list) * TRAINING_IMAGE_PERCENT)
+	train_cnt = int(len(images_list) * define.TRAINING_IMAGE_PERCENT)
 
 	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt + 1:], labels_list[train_cnt + 1:]
 
@@ -123,7 +145,7 @@ def main(_):
 	image_w = 300
 	image_h = 300
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_files_from_oxford_pet_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_files_from_kaggle_dataset(data_dir)	
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
