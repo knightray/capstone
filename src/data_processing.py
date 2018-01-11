@@ -13,6 +13,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import define
+from PIL import Image
 
 FLAGS = None
 
@@ -123,7 +124,8 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height)
 	labels = input_queue[1]
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 
-	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
+	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
+	images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 	images = tf.image.per_image_standardization(images)
 
 	#print("get_batches():images.shape=%s" % images.shape)
@@ -133,6 +135,11 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height)
 
 	return image_batch, label_batch
 	
+def get_image_info(images):
+	for image in images:
+		im = Image.open(image)
+		print("%s -> %s" % (image, im.size))
+		im.close()
 
 def main(_):
 
@@ -147,6 +154,8 @@ def main(_):
 
 	train_images_list, train_labels_list, test_images_list, test_labels_list = get_files_from_kaggle_dataset(data_dir)	
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
+
+	#get_image_info(train_images_list)
 
 	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
 	print ("We got image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch.shape))
