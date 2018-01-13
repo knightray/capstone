@@ -60,7 +60,7 @@ def get_ok_cnt(labels, predications):
 	
 	return ok_cnt
 
-def test_for_test_data(log_dir, images_list, labels_list):
+def test_for_verify_data(log_dir, images_list, labels_list):
 
 	with tf.Graph().as_default():
 		BATCH_SIZE = len(images_list)
@@ -75,22 +75,21 @@ def test_for_test_data(log_dir, images_list, labels_list):
 
 		with tf.Session() as sess:
 
-			print("Reading checkpoints...")
+			#print("Reading checkpoints...")
 			ckpt = tf.train.get_checkpoint_state(logs_train_dir)
 			if ckpt and ckpt.model_checkpoint_path:
 				global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
 				saver.restore(sess, ckpt.model_checkpoint_path)
-				print('Loading success, global_step is %s' % global_step)
+				#print('Loading success, global_step is %s' % global_step)
 			else:
 				print('No checkpoint file found')
 
 			predictions = sess.run(logit)
-			for p, label, image in zip(predictions, labels_list, images_list):
-				max_index = np.argmax(p)
-				if label == max_index:
-					print("%-40s [%s] - [OK] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
-				else:
-					print("%-40s [%s] - [NG] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
+			if (labels_list != None):
+				for p, label, image in zip(predictions, labels_list, images_list):
+					max_index = np.argmax(p)
+					is_ok = "OK" if max_index == label else "NG"
+					print("%-40s [%s] - [%s] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), is_ok, p[define.DOG]))
 
 	pred = [np.argmax(p) for p in predictions]	
 	prob = [p[define.DOG] for p in predictions]
@@ -136,25 +135,13 @@ def test_for_given_image(log_dir, image_file):
 			else:
 				print('This is a dog with possibility %.6f' %prediction[:, 1])	
 
-def main(_):
-
+def do_test(images_list, labels_list):
 	log_dir = vars(FLAGS)['log_dir']
-	test_image = vars(FLAGS)['test_image']
 
-	#test_for_given_image(log_dir, test_image)
-	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
-	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg']
-	#test_labels_list = [1, 1]
-	#test_labels_list = [1]
-
-	test_data_list = log_dir + '/test_list.csv'
-	test_images_list, test_labels_list = data_processing.load_list(test_data_list)
-	#test_images_list = test_images_list[:8]
-	#test_labels_list = test_labels_list[:8]
-
+	print(images_list)
 	batch_size = 8
 	ok_cnt = 0
-	image_cnt = len(test_images_list)
+	image_cnt = len(images_list)
 	loop_cnt = int(image_cnt / batch_size)
 	if image_cnt % batch_size != 0:
 		loop_cnt += 1
@@ -163,16 +150,55 @@ def main(_):
 	probablities = []
 	for i in range(loop_cnt):
 		print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
-		image_batch = test_images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		label_batch = test_labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		pred_batch, prob_batch =  test_for_test_data(log_dir, image_batch, label_batch)
+		image_batch = images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
+		if (labels_list != None):
+			label_batch = labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
+		else:
+		 	label_batch = None
+		pred_batch, prob_batch =  test_for_verify_data(log_dir, image_batch, label_batch)
 		predictions.extend(pred_batch)
 		probablities.extend(prob_batch)
 
-	ok_cnt = get_ok_cnt(test_labels_list, predictions)
-	log_loss = get_log_loss(test_labels_list, probablities)
+	return predictions, probablities
 
-	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
+def main(_):
+
+	log_dir = vars(FLAGS)['log_dir']
+	test_image = vars(FLAGS)['test_image']
+	test_set = vars(FLAGS)['test_set']
+
+	#test_for_given_image(log_dir, test_image)
+	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
+	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg']
+	#test_labels_list = [1, 1]
+	#test_labels_list = [1]
+
+	if (test_image != ""):
+		test_for_given_image(log_dir, test_image)
+
+	elif (test_set != ""):
+		print("We will evaluate our model by test data set...")
+		test_images_list = data_processing.get_test_data_from_kaggle_dataset(test_set)
+	
+		#test_images_list = test_images_list[:8]
+		predictions, probalities = do_test(test_images_list, None)
+		f = open("dogs_vs_cats_submission.csv", "w")
+		f.write("id,label\n")
+		for image, p in zip(test_images_list, probalities):
+			f.write("%s,%.1f\n" % (image.split('/')[-1].split('.')[0], p))
+		f.close()
+
+	else:
+		test_data_list = log_dir + '/test_list.csv'
+		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
+
+		#test_images_list = test_images_list[:8]
+		#test_labels_list = test_labels_list[:8]
+		predictions, probalities = do_test(test_images_list, test_labels_list)
+		ok_cnt = get_ok_cnt(test_labels_list, predictions)
+		log_loss = get_log_loss(test_labels_list, probablities)
+
+		print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -180,5 +206,7 @@ if __name__ == '__main__':
                       help='Directory for storing logs data')
 	parser.add_argument('--test_image', type=str, default="",
                       help='A given image for test')
+	parser.add_argument('--test_set', type=str, default="",
+                      help='Images path for test')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
