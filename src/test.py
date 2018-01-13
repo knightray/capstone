@@ -46,15 +46,15 @@ def read_images(images_list):
 def is_dog_or_cat(label):
 	return 'CAT' if label == define.CAT else 'DOG'
 
-def get_log_loss(labels, predictions):
-	log_loss = tf.losses.log_loss(labels, pred)
+def get_log_loss(labels, predications):
+	log_loss = tf.losses.log_loss(labels, predications)
 	with tf.Session() as sess:
 		log_loss_val = sess.run(log_loss)
 	return log_loss_val
 
-def get_ok_cnt(labels, predictions):
+def get_ok_cnt(labels, predications):
 	ok_cnt = 0
-	for p, l in zip(predictions, labels):
+	for p, l in zip(predications, labels):
 		if p == l:
 			ok_cnt += 1
 	
@@ -149,8 +149,9 @@ def main(_):
 	test_data_list = log_dir + '/test_list.csv'
 	test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
-	accurcy = 0.0
-	batch_size = 1
+	test_images_list = test_images_list[:8]
+	test_labels_list = test_labels_list[:8]
+	batch_size = 8
 	ok_cnt = 0
 	image_cnt = len(test_images_list)
 	loop_cnt = int(image_cnt / batch_size)
@@ -165,10 +166,10 @@ def main(_):
 		pred_batch =  test_for_test_data(log_dir, image_batch, label_batch)
 		predications.extend(pred_batch)
 
-	ok_cnt = get_ok_cnt(test_labels_list, predictions)
-	log_loss = get_log_loss(test_labels_list, predictions)
+	ok_cnt = get_ok_cnt(test_labels_list, predications)
+	log_loss = get_log_loss(test_labels_list, predications)
 
-	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (accurcy / image_cnt, ok_cnt, log_loss))
+	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
