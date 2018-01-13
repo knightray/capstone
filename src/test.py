@@ -93,7 +93,8 @@ def test_for_test_data(log_dir, images_list, labels_list):
 					print("%-40s [%s] - [NG] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
 
 	pred = [np.argmax(p) for p in predictions]	
-	return pred
+	prob = [p[define.DOG] for p in predictions]
+	return pred, prob
 
 def test_for_given_image(log_dir, image_file):
 
@@ -148,9 +149,9 @@ def main(_):
 
 	test_data_list = log_dir + '/test_list.csv'
 	test_images_list, test_labels_list = data_processing.load_list(test_data_list)
+	#test_images_list = test_images_list[:8]
+	#test_labels_list = test_labels_list[:8]
 
-	test_images_list = test_images_list[:8]
-	test_labels_list = test_labels_list[:8]
 	batch_size = 8
 	ok_cnt = 0
 	image_cnt = len(test_images_list)
@@ -158,16 +159,18 @@ def main(_):
 	if image_cnt % batch_size != 0:
 		loop_cnt += 1
 
-	predications = []
+	predictions = []
+	probablities = []
 	for i in range(loop_cnt):
 		print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
 		image_batch = test_images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
 		label_batch = test_labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		pred_batch =  test_for_test_data(log_dir, image_batch, label_batch)
-		predications.extend(pred_batch)
+		pred_batch, prob_batch =  test_for_test_data(log_dir, image_batch, label_batch)
+		predictions.extend(pred_batch)
+		probablities.extend(prob_batch)
 
-	ok_cnt = get_ok_cnt(test_labels_list, predications)
-	log_loss = get_log_loss(test_labels_list, predications)
+	ok_cnt = get_ok_cnt(test_labels_list, predictions)
+	log_loss = get_log_loss(test_labels_list, probablities)
 
 	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 
