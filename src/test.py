@@ -46,21 +46,19 @@ def read_images(images_list):
 def is_dog_or_cat(label):
 	return 'CAT' if label == define.CAT else 'DOG'
 
-def get_accurcy(images, labels, predictions):
+def get_log_loss(labels, predictions):
+	log_loss = tf.losses.log_loss(labels, pred)
+	with tf.Session() as sess:
+		log_loss_val = sess.run(log_loss)
+	return log_loss_val
 
-	accurcy = 0.0
+def get_ok_cnt(labels, predictions):
 	ok_cnt = 0
-	for image, label, p in zip(images, labels, predictions):
-		accurcy += p[label]
-		max_index = np.argmax(p)
-		if label == max_index:
-			print("%-40s [%s] - [OK] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p))
+	for p, l in zip(predictions, labels):
+		if p == l:
 			ok_cnt += 1
-		else:
-			print("%-40s [%s] - [NG] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p))
-
-	return accurcy, ok_cnt
-
+	
+	return ok_cnt
 
 def test_for_test_data(log_dir, images_list, labels_list):
 
@@ -87,8 +85,15 @@ def test_for_test_data(log_dir, images_list, labels_list):
 				print('No checkpoint file found')
 
 			predictions = sess.run(logit)
+			for p, label, image in zip(predictions, labels_list, images_list):
+				max_index = np.argmax(p)
+				if label == max_index:
+					print("%-40s [%s] - [OK] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
+				else:
+					print("%-40s [%s] - [NG] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), p[max_index]))
 
-	return get_accurcy(images_list, labels_list, predictions)
+	pred = [np.argmax(p) for p in predictions]	
+	return pred
 
 def test_for_given_image(log_dir, image_file):
 
@@ -152,15 +157,18 @@ def main(_):
 	if image_cnt % batch_size != 0:
 		loop_cnt += 1
 
+	predications = []
 	for i in range(loop_cnt):
 		print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
 		image_batch = test_images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
 		label_batch = test_labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		acc, okc =  test_for_test_data(log_dir, image_batch, label_batch)
-		accurcy += acc
-		ok_cnt += okc
+		pred_batch =  test_for_test_data(log_dir, image_batch, label_batch)
+		predications.extend(pred_batch)
 
-	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, TEST COUNT = %d  *******" % (accurcy / image_cnt, ok_cnt, image_cnt))
+	ok_cnt = get_ok_cnt(test_labels_list, predictions)
+	log_loss = get_log_loss(test_labels_list, predictions)
+
+	print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (accurcy / image_cnt, ok_cnt, log_loss))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
