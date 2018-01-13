@@ -36,7 +36,18 @@ def save_list(images, labels, file_name):
 		f.write("%s,%d\n" % (image, label))
 	f.close()
 
-def get_files_from_kaggle_dataset(data_dir):
+def get_test_data_from_kaggle_dataset(data_dir):
+	images_dir = data_dir + 'test/'
+
+	images_list = []
+	files = os.listdir(images_dir)
+	for f in files:
+		images_list.append(images_dir + f)
+
+	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[0]))
+	return images_list
+
+def get_train_data_from_kaggle_dataset(data_dir):
 	images_dir = data_dir + 'train/'
 
 	images_list = []
