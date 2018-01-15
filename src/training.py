@@ -74,7 +74,7 @@ def main(_):
 	data_dir = vars(FLAGS)['data_dir']
 	log_dir = vars(FLAGS)['log_dir']
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_files_from_kaggle_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	train_data_list = log_dir + '/train_list.csv'

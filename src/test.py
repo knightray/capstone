@@ -195,8 +195,9 @@ def main(_):
 		#test_images_list = test_images_list[:8]
 		#test_labels_list = test_labels_list[:8]
 		predictions, probalities = do_test(test_images_list, test_labels_list)
+		image_cnt = len(test_images_list)
 		ok_cnt = get_ok_cnt(test_labels_list, predictions)
-		log_loss = get_log_loss(test_labels_list, probablities)
+		log_loss = get_log_loss(test_labels_list, probalities)
 
 		print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 
