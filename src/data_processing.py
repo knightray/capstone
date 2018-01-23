@@ -140,7 +140,7 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height)
 	images = tf.image.per_image_standardization(images)
 
 	#print("get_batches():images.shape=%s" % images.shape)
-	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 64)
+	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 64, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)
 
@@ -158,12 +158,14 @@ def main(_):
 
 	data_dir = vars(FLAGS)['data_dir']
 	output_dir = data_dir + "output/"
-	batch_size = 10
-	batch_num = 1
+	batch_size = 8
+	batch_num = 2
 	image_w = 300
 	image_h = 300
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_files_from_kaggle_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
+	train_images_list = train_images_list[:10]
+	train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	#get_image_info(train_images_list)
@@ -185,7 +187,7 @@ def main(_):
 				for j in range(batch_size):
 					print("batch %d, %d, label:%d" % (i, j, label[j]))
 					plt.imshow(image[j,:,:,:])
-					filepath = output_dir + "batch%d_%d_label%d.png" % (i, j, label[j])
+					filepath = output_dir + "batch%d_%d.png" % (i, j)
 					plt.savefig(filepath)
 					#plt.show()
 				i += 1

@@ -19,15 +19,19 @@ def training(images, labels):
 
 	image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
-	print("image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch))
+	#print("image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch))
 	train_logits = model.inference(image_batch, define.BATCH_SIZE, define.N_CLASSES)
 	train_loss = model.losses(train_logits, label_batch)
 	train_op = model.trainning(train_loss, define.LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, label_batch)
 
 	logs_dir = vars(FLAGS)['log_dir']
-	max_step = vars(FLAGS)['max_step']
-
+	if (vars(FLAGS)['max_step'] != 0):
+		max_step = vars(FLAGS)['max_step']
+	else:
+		max_step = int(len(images) / define.BATCH_SIZE)
+	
+	print("Do trainning for %d step in one epoch." % max_step)
 	if not os.path.exists(logs_dir):
 		os.mkdir(logs_dir)
 
@@ -41,19 +45,20 @@ def training(images, labels):
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 	try:
-		for step in range(max_step):
-			if coord.should_stop():
-				break
-			_, tra_loss, tra_acc = sess.run([train_op, train_loss, train_acc_op])
+		for epoch in range(define.N_EPOCH):
+			for step in range(max_step):
+				if coord.should_stop():
+					break
+				_, tra_loss, tra_acc = sess.run([train_op, train_loss, train_acc_op])
 
-			if step % 50 == 0:
-				print('Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
-				summary_str = sess.run(summary_op)
-				train_writer.add_summary(summary_str, step)
+				if step % 100 == 0:
+					print(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
+					summary_str = sess.run(summary_op)
+					train_writer.add_summary(summary_str, step)
 
-			if step % 2000 == 0 or (step + 1) == max_step:
-				checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
-				saver.save(sess, checkpoint_path, global_step=step)
+			print("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
+			checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
+			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
 
 	except tf.errors.OutOfRangeError:
 		print('Done training -- epoch limit reached')
@@ -62,12 +67,6 @@ def training(images, labels):
 
 	coord.join(threads)
 	sess.close()
-
-def test_by_test_set(images, labels):
-	pass
-
-def test_by_one_image(image):
-	pass
 
 def main(_):
 
@@ -92,7 +91,7 @@ if __name__ == '__main__':
                       help='Directory for storing input data')
 	parser.add_argument('--log_dir', type=str, default=define.LOG_DIR,
                       help='Directory for storing logs data')
-	parser.add_argument('--max_step', type=int, default=define.MAX_STEP,
+	parser.add_argument('--max_step', type=int, default=0,
                       help='Max steps for trainning')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
