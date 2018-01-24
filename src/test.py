@@ -195,7 +195,7 @@ def main(_):
 	elif (test_type == define.TYPE_TEST_SET):
 		if (vars(FLAGS)['silence'] != True):
 			define.log("We will evaluate our model by test data set...")
-		test_images_list = data_processing.get_test_data_from_kaggle_dataset(test_set)
+		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
 	
 		#test_images_list = test_images_list[:8]
 		predictions, probalities = do_test(test_images_list, None)
