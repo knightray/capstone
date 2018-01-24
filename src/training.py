@@ -31,7 +31,7 @@ def training(images, labels):
 	else:
 		max_step = int(len(images) / define.BATCH_SIZE)
 	
-	print("Do trainning for %d step in one epoch." % max_step)
+	define.log("Do trainning for %d step in one epoch." % max_step)
 	if not os.path.exists(logs_dir):
 		os.mkdir(logs_dir)
 
@@ -52,16 +52,16 @@ def training(images, labels):
 				_, tra_loss, tra_acc = sess.run([train_op, train_loss, train_acc_op])
 
 				if step % 100 == 0:
-					print(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
+					define.log(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 					summary_str = sess.run(summary_op)
 					train_writer.add_summary(summary_str, step)
 
-			print("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
+			define.log("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
 			checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
 			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
 
 	except tf.errors.OutOfRangeError:
-		print('Done training -- epoch limit reached')
+		define.log('Done training -- epoch limit reached')
 	finally:
 		coord.request_stop()
 
@@ -74,14 +74,13 @@ def main(_):
 	log_dir = vars(FLAGS)['log_dir']
 
 	train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
-	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
+	define.log("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	train_data_list = log_dir + '/train_list.csv'
 	data_processing.save_list(train_images_list, train_labels_list, train_data_list)
 	test_data_list = log_dir + '/test_list.csv'
 	data_processing.save_list(test_images_list, test_labels_list, test_data_list)
 
-	print("do training...")
 	training(train_images_list, train_labels_list)
 
 

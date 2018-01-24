@@ -7,7 +7,102 @@
 
 import tensorflow as tf
 
-def inference(images, batch_size, n_classes):
+
+class Model(object):
+	def __init__(self):
+		pass
+
+	def conv(self, layer_name, x, out_channels, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain=True):
+		in_channels = x.get_shape()[-1]
+		with tf.variable_scope(layer_name):
+			w = tf.get_variable(name='weights',
+					trainable=is_pretrain,
+					shape=[kernel_size[0], kernel_size[1], in_channels, out_channels],
+					initializer=tf.contrib.layers.xavier_initializer())
+			b = tf.get_variable(name='biases',
+					trainable=is_pretrain,
+					shape=[out_channels],
+					initializer=tf.constant_initializer(0.0))
+			x = tf.nn.conv2d(x, w, stride, padding='SAME', name='conv')
+			x = tf.nn.bias_add(x, b, name='bias_add')
+			x = tf.nn.relu(x, name='relu')
+			return x
+
+	def pool(self, layer_name, x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True):
+		if is_max_pool:
+			x = tf.nn.max_pool(x, kernel, strides=stride, padding='SAME', name=layer_name)
+		else:
+			x = tf.nn.avg_pool(x, kernel, strides=stride, padding='SAME', name=layer_name)
+		return x
+
+	def batch_norm(self, x):
+		epsilon = 1e-3
+		batch_mean, batch_var = tf.nn.moments(x, [0])
+		x = tf.nn.batch_normalization(x,
+				mean=batch_mean,
+				variance=batch_var,
+				offset=None,
+				scale=None,
+				variance_epsilon=epsilon)
+		return x
+
+	def fc_layer(self, layer_name, x, out_nodes):
+		shape = x.get_shape()
+		if len(shape) == 4:
+			size = shape[1].value * shape[2].value * shape[3].value
+		else:
+			size = shape[-1].value
+
+		with tf.variable_scope(layer_name):
+			w = tf.get_variable('weights',
+					shape=[size, out_nodes],
+					initializer=tf.contrib.layers.xavier_initializer())
+			b = tf.get_variable('biases',
+					shape=[out_nodes],
+					initializer=tf.constant_initializer(0.0))
+			flat_x = tf.reshape(x, [-1, size]) # flatten into 1D
+
+			x = tf.nn.bias_add(tf.matmul(flat_x, w), b)
+			x = tf.nn.relu(x)
+		return x
+
+	def softmax_linear(self, layer_name, x, out_nodes):
+
+		shape = x.get_shape()
+		if len(shape) == 4:
+			size = shape[1].value * shape[2].value * shape[3].value
+		else:
+			size = shape[-1].value
+		with tf.variable_scope(layer_name) as scope:
+			weights = tf.get_variable('softmax_linear',
+					shape=[size, out_nodes],
+					dtype=tf.float32,
+					initializer=tf.contrib.layers.xavier_initializer())
+			biases = tf.get_variable('biases',
+					shape=[out_nodes],
+					dtype=tf.float32,
+					initializer=tf.constant_initializer(0.0))
+			softmax_linear = tf.add(tf.matmul(x, weights), biases, name='softmax_linear')
+
+		return softmax_linear
+		
+
+class SimpleCNN(Model):
+	def __init__(self):
+		pass
+
+	def inference(self, x, batch_size, n_classes):
+		x = self.conv('conv1', x, 16, kernel_size = [3, 3], stride = [1, 1, 1, 1])
+		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
+		x = self.conv('conv2', x, 16, kernel_size = [3, 3], stride = [1, 1, 1, 1])
+		x = self.pool('pooling2', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
+		x = self.fc_layer('fc1', x, 128)
+		x = self.fc_layer('fc2', x, 128)
+		x = self.softmax_linear('output', x, n_classes)
+		return x
+
+
+def simple_cnn(images, batch_size, n_classes):
     '''Build the model
     Args:
         images: image batch, 4D tensor, tf.float32, [batch_size, width, height, channels]
@@ -63,6 +158,8 @@ def inference(images, batch_size, n_classes):
     with tf.variable_scope('local3') as scope:
         reshape = tf.reshape(pool2, shape=[batch_size, -1])
         dim = reshape.get_shape()[1].value
+        print("reshape = %s, dim = %d" % (reshape, dim))
+        print("pool2.shape=%s" % pool2.shape)
         weights = tf.get_variable('weights',
                                   shape=[dim,128],
                                   dtype=tf.float32,
@@ -99,6 +196,12 @@ def inference(images, batch_size, n_classes):
         softmax_linear = tf.add(tf.matmul(local4, weights), biases, name='softmax_linear')
 
     return softmax_linear
+
+
+scnn = SimpleCNN()
+def inference(images, batch_size, n_classes):
+	return scnn.inference(images, batch_size, n_classes)
+	#return simple_cnn(images, batch_size, n_classes)
 
 #%%
 def losses(logits, labels):

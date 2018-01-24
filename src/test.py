@@ -83,16 +83,16 @@ def test_for_batch_data(log_dir, images_list, labels_list, epoch = -1):
 					global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
 					saver.restore(sess, ckpt.model_checkpoint_path)
 					if (vars(FLAGS)['silence'] != True):
-						print('Loading success, global_step is %s' % global_step)
+						define.log('Loading success, global_step is %s' % global_step)
 				else:
-					print('No checkpoint file found')
+					define.log('No checkpoint file found')
 			else:
 				if ckpt and ckpt.all_model_checkpoint_paths:
 					model_path = ckpt.all_model_checkpoint_paths[epoch]
 					global_step = model_path.split('/')[-1].split('-')[-1]
 					saver.restore(sess, model_path)
 					if (vars(FLAGS)['silence'] != True):
-						print('Loading success, global_step is %s' % global_step)
+						define.log('Loading success, global_step is %s' % global_step)
 
 			predictions = sess.run(logit)
 			if (labels_list != None):
@@ -100,7 +100,7 @@ def test_for_batch_data(log_dir, images_list, labels_list, epoch = -1):
 					max_index = np.argmax(p)
 					is_ok = "OK" if max_index == label else "NG"
 					if (vars(FLAGS)['silence'] != True):
-						print("%-40s [%s] - [%s] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), is_ok, p[define.DOG]))
+						define.log("%-40s [%s] - [%s] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), is_ok, p[define.DOG]))
 
 	pred = [np.argmax(p) for p in predictions]	
 	prob = [p[define.DOG] for p in predictions]
@@ -131,24 +131,24 @@ def test_for_given_image(log_dir, image_file):
 		with tf.Session() as sess:
 
 			if (vars(FLAGS)['silence'] != True):
-				print("Reading checkpoints...")
+				define.log("Reading checkpoints...")
 			ckpt = tf.train.get_checkpoint_state(logs_train_dir)
 			if ckpt and ckpt.model_checkpoint_path:
 				global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
 				saver.restore(sess, ckpt.model_checkpoint_path)
 				if (vars(FLAGS)['silence'] != True):
-					print('Loading success, global_step is %s' % global_step)
+					define.log('Loading success, global_step is %s' % global_step)
 			else:
-				print('No checkpoint file found')
+				define.log('No checkpoint file found')
 
 			prediction = sess.run(logit, feed_dict={x: image_array})
 			max_index = np.argmax(prediction)
 			if max_index==0:
 				if (vars(FLAGS)['silence'] != True):
-					print('This is a cat with possibility %.6f' %prediction[:, 0])
+					define.log('This is a cat with possibility %.6f' %prediction[:, 0])
 			else:
 				if (vars(FLAGS)['silence'] != True):
-					print('This is a dog with possibility %.6f' %prediction[:, 1])	
+					define.log('This is a dog with possibility %.6f' %prediction[:, 1])	
 
 def do_test(images_list, labels_list, epoch = -1):
 	log_dir = vars(FLAGS)['log_dir']
@@ -165,7 +165,7 @@ def do_test(images_list, labels_list, epoch = -1):
 	probablities = []
 	for i in range(loop_cnt):
 		if (vars(FLAGS)['silence'] != True):
-			print("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
+			define.log("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
 		image_batch = images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
 		if (labels_list != None):
 			label_batch = labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
@@ -194,7 +194,7 @@ def main(_):
 
 	elif (test_type == define.TYPE_TEST_SET):
 		if (vars(FLAGS)['silence'] != True):
-			print("We will evaluate our model by test data set...")
+			define.log("We will evaluate our model by test data set...")
 		test_images_list = data_processing.get_test_data_from_kaggle_dataset(test_set)
 	
 		#test_images_list = test_images_list[:8]
@@ -208,7 +208,7 @@ def main(_):
 
 	elif (test_type == define.TYPE_EPOCH_VERIFY_SET):
 		if (vars(FLAGS)['silence'] != True):
-			print("We will evaluate model of each epoch by verify data set...")
+			define.log("We will evaluate model of each epoch by verify data set...")
 		test_data_list = log_dir + '/test_list.csv'
 		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
@@ -220,11 +220,11 @@ def main(_):
 			ok_cnt = get_ok_cnt(test_labels_list, predictions)
 			log_loss = get_log_loss(test_labels_list, probalities)
 
-			print("****** EPOCH %d: AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (epoch, ok_cnt / image_cnt, ok_cnt, log_loss))
+			define.log("****** EPOCH %d: AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (epoch, ok_cnt / image_cnt, ok_cnt, log_loss))
 
 	elif (test_type == define.TYPE_VERIFY_SET):
 		if (vars(FLAGS)['silence'] != True):
-			print("We will evaluate model by verify data set...")
+			define.log("We will evaluate model by verify data set...")
 		test_data_list = log_dir + '/test_list.csv'
 		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
@@ -235,9 +235,9 @@ def main(_):
 		ok_cnt = get_ok_cnt(test_labels_list, predictions)
 		log_loss = get_log_loss(test_labels_list, probalities)
 
-		print("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
+		define.log("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 	else:
-		print("Unrecognized type = %s" % test_type)
+		define.log("Unrecognized type = %s" % test_type)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
