@@ -56,6 +56,7 @@ def training(images, labels):
 					summary_str = sess.run(summary_op)
 					train_writer.add_summary(summary_str, step)
 
+			define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 			define.log("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
 			checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
 			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
