@@ -39,3 +39,11 @@ TYPE_ONE_IMAGE = "image"
 TYPE_VERIFY_SET = "verify"
 TYPE_TEST_SET = "test"
 TYPE_EPOCH_VERIFY_SET = "epoch"
+
+
+#
+# Log definition
+#
+import time
+def log(s):
+	print("%s: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), s))
