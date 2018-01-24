@@ -91,7 +91,7 @@ class SimpleCNN(Model):
 	def __init__(self):
 		pass
 
-	def inference(self, x, batch_size, n_classes):
+	def inference(self, x, n_classes):
 		x = self.conv('conv1', x, 16, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv2', x, 16, kernel_size = [3, 3], stride = [1, 1, 1, 1])
@@ -101,6 +101,41 @@ class SimpleCNN(Model):
 		x = self.softmax_linear('output', x, n_classes)
 		return x
 
+class VGG16(Model):
+	def __init__(self):
+		pass
+
+	def inference(self, x, n_classes):
+		x = self.conv('conv1_1', x, 64, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv1_2', x, 64, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.pool('pool1', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
+		x = self.conv('conv2_1', x, 128, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv2_2', x, 128, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.pool('pool2', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
+		x = self.conv('conv3_1', x, 256, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv3_2', x, 256, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv3_3', x, 256, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
+		x = self.conv('conv4_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv4_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv4_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
+		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1])
+		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
+		x = self.fc_layer('fc6', x, out_nodes=4096)
+		#x = tools.batch_norm(x)
+		x = self.fc_layer('fc7', x, out_nodes=4096)
+		#x = tools.batch_norm(x)
+		x = self.fc_layer('fc8', x, out_nodes=n_classes)		
+		return x
+	
 
 def simple_cnn(images, batch_size, n_classes):
     '''Build the model
@@ -198,9 +233,9 @@ def simple_cnn(images, batch_size, n_classes):
     return softmax_linear
 
 
-scnn = SimpleCNN()
+cnn = VGG16()
 def inference(images, batch_size, n_classes):
-	return scnn.inference(images, batch_size, n_classes)
+	return cnn.inference(images, n_classes)
 	#return simple_cnn(images, batch_size, n_classes)
 
 #%%
