@@ -130,9 +130,9 @@ class VGG16(Model):
 		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
 		x = self.fc_layer('fc6', x, out_nodes=4096)
-		#x = tools.batch_norm(x)
+		x = self.batch_norm(x)
 		x = self.fc_layer('fc7', x, out_nodes=4096)
-		#x = tools.batch_norm(x)
+		x = self.batch_norm(x)
 		x = self.fc_layer('fc8', x, out_nodes=n_classes)		
 		return x
 	
