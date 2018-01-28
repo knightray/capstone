@@ -83,6 +83,8 @@ def test_for_given_image(log_dir, image_file):
 def do_test(images_list, labels_list, epoch = -1):
 	log_dir = vars(FLAGS)['log_dir']
 
+	if (epoch != -1):
+		define.log("We will test our model after %d epoch." % epoch)
 	with tf.Graph().as_default():
 		if labels_list == None:
 			labels_list = [0 for i in range(len(images_list))]
@@ -151,6 +153,7 @@ def main(_):
 	log_dir = vars(FLAGS)['log_dir']
 	test_image = vars(FLAGS)['test_image']
 	test_type = vars(FLAGS)['type']
+	epoch = vars(FLAGS)['epoch']
 
 	#test_for_given_image(log_dir, test_image)
 	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
@@ -167,7 +170,7 @@ def main(_):
 		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
 	
 		#test_images_list = test_images_list[:8]
-		predictions, probalities = do_test(test_images_list, None)
+		predictions, probalities = do_test(test_images_list, None, epoch = epoch)
 		time_stamp = time.strftime("%m%d%H%M%S", time.localtime())
 		f = open("dogs_vs_cats_submission_%s.csv" % time_stamp, "w")
 		f.write("id,label\n")
@@ -199,7 +202,7 @@ def main(_):
 
 		#test_images_list = test_images_list[:16]
 		#test_labels_list = test_labels_list[:16]
-		predictions, probalities = do_test(test_images_list, test_labels_list)
+		predictions, probalities = do_test(test_images_list, test_labels_list, epoch = epoch)
 		image_cnt = len(test_images_list)
 		ok_cnt = get_ok_cnt(test_labels_list, predictions)
 		log_loss = get_log_loss(test_labels_list, probalities)
@@ -218,5 +221,7 @@ if __name__ == '__main__':
                       help='Test type, should be the values as like (verify, test, image, epoch)')
 	parser.add_argument('--silence', action='store_true',
 						help='Whether output debug log or not.')
+	parser.add_argument('--epoch', type=int, default=-1,
+                      help='A given epoch for test')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
