@@ -169,7 +169,7 @@ class VGG16(Model):
 
 def get_model():
 	model = None
-	if (define.USE_MODE == 'simple_cnn'):
+	if (define.USE_MODEL == 'simple_cnn'):
 		model = SimpleCNN()
 	else:
 		model = VGG16()

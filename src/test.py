@@ -18,33 +18,6 @@ from model import get_model
 
 FLAGS = None
 
-def get_test_image(image_file):
-	image = tf.image.decode_jpeg(tf.read_file(image_file), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
-	image = tf.image.resize_image_with_crop_or_pad(image, define.IMAGE_W, define.IMAGE_H)
-	images = tf.image.per_image_standardization(images)
-	image = tf.cast(image, tf.float32)
-	image = tf.reshape(image, [1, define.IMAGE_W, define.IMAGE_H, 3])
-	return image
-
-def read_images(images_list):
-    
-	images_array = None
-	for image_file in images_list:
-		im = Image.open(image_file)
-		im = im.resize([define.IMAGE_W, define.IMAGE_H])
-		image_data = np.array(im)
-		image = tf.cast(image_data, tf.float32)
-		image = tf.image.per_image_standardization(image)   
-
-		if (images_array == None):
-			images_array = image
-		else:
-			images_array = tf.concat([images_array, image], 0)
-
-	images_array = tf.reshape(images_array, [-1, define.IMAGE_W, define.IMAGE_H, 3])        
-	#print("images_array = %s" % images_array.shape)
-	return images_array
-
 def is_dog_or_cat(label):
 	return 'CAT' if label == define.CAT else 'DOG'
 
@@ -162,9 +135,9 @@ def do_test(images_list, labels_list, epoch = -1):
 					probablities.extend([p[define.DOG] for p in batch_prob])
 					total_correct += np.sum(batch_correct)
 					step += 1
-				print('Total testing samples: %d' %num_sample)
-				print('Total correct predictions: %d' %total_correct)
-				print('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
+				define.log('Total testing samples: %d' %num_sample)
+				define.log('Total correct predictions: %d' %total_correct)
+				define.log('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
 			except Exception as e:
 				coord.request_stop(e)
 			finally:

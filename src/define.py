@@ -32,7 +32,7 @@ N_EPOCH = 10
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 # mode can be set as 'simple_cnn' or 'vgg16'
-USE_MODE = 'simple_cnn'
+USE_MODEL = 'simple_cnn'
 
 # 
 # Test definition

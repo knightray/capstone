@@ -39,7 +39,7 @@ def training(images, labels):
 	summary_op = tf.summary.merge_all()
 	sess = tf.Session()
 	train_writer = tf.summary.FileWriter(logs_dir, sess.graph)
-	saver = tf.train.Saver()
+	saver = tf.train.Saver(max_to_keep=define.N_EPOCH)
 
 	sess.run(tf.global_variables_initializer())
 	coord = tf.train.Coordinator()
