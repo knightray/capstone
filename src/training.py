@@ -8,19 +8,20 @@
 import argparse
 import tensorflow as tf
 import data_processing
-import model
 import sys
 import os
 import define
+from model import get_model 
 
 FLAGS = None
 
 def training(images, labels):
 
+	model = get_model()
 	image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
 	#print("image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch))
-	train_logits = model.inference(image_batch, define.BATCH_SIZE, define.N_CLASSES)
+	train_logits = model.inference(image_batch, define.N_CLASSES)
 	train_loss = model.losses(train_logits, label_batch)
 	train_op = model.trainning(train_loss, define.LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, label_batch)
@@ -58,7 +59,7 @@ def training(images, labels):
 
 			define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 			define.log("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
-			checkpoint_path = os.path.join(logs_dir, 'model.ckpt')
+			checkpoint_path = os.path.join(logs_dir, 'model_%s.ckpt' % define.USE_MODEL)
 			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
 
 	except tf.errors.OutOfRangeError:

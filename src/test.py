@@ -8,12 +8,13 @@
 import argparse
 import tensorflow as tf
 import data_processing
-import model
 import sys
 import numpy as np
 from PIL import Image
 import define
 import time
+import math
+from model import get_model
 
 FLAGS = None
 
@@ -61,56 +62,12 @@ def get_ok_cnt(labels, predications):
 	
 	return ok_cnt
 
-def test_for_batch_data(log_dir, images_list, labels_list, epoch = -1):
-
-	with tf.Graph().as_default():
-		BATCH_SIZE = len(images_list)
-		N_CLASSES = 2
-
-		image_batch = read_images(images_list)
-		logit = model.inference(image_batch, BATCH_SIZE, N_CLASSES)
-		logit = tf.nn.softmax(logit)
-
-		logs_train_dir = log_dir
-		saver = tf.train.Saver()
-
-		with tf.Session() as sess:
-
-			#print("Reading checkpoints...")
-			ckpt = tf.train.get_checkpoint_state(logs_train_dir)
-			if (epoch == -1):
-				if ckpt and ckpt.model_checkpoint_path:
-					global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-					saver.restore(sess, ckpt.model_checkpoint_path)
-					if (vars(FLAGS)['silence'] != True):
-						define.log('Loading success, global_step is %s' % global_step)
-				else:
-					define.log('No checkpoint file found')
-			else:
-				if ckpt and ckpt.all_model_checkpoint_paths:
-					model_path = ckpt.all_model_checkpoint_paths[epoch]
-					global_step = model_path.split('/')[-1].split('-')[-1]
-					saver.restore(sess, model_path)
-					if (vars(FLAGS)['silence'] != True):
-						define.log('Loading success, global_step is %s' % global_step)
-
-			predictions = sess.run(logit)
-			if (labels_list != None):
-				for p, label, image in zip(predictions, labels_list, images_list):
-					max_index = np.argmax(p)
-					is_ok = "OK" if max_index == label else "NG"
-					if (vars(FLAGS)['silence'] != True):
-						define.log("%-40s [%s] - [%s] - with possibility %s" % (image.split('/')[-1], is_dog_or_cat(label), is_ok, p[define.DOG]))
-
-	pred = [np.argmax(p) for p in predictions]	
-	prob = [p[define.DOG] for p in predictions]
-	return pred, prob
-
 def test_for_given_image(log_dir, image_file):
 
 	im = Image.open(image_file)
 	im = im.resize([define.IMAGE_W, define.IMAGE_H])
 	image_array = np.array(im)
+	model = get_model()
 
 	with tf.Graph().as_default():
 		BATCH_SIZE = 1
@@ -119,7 +76,7 @@ def test_for_given_image(log_dir, image_file):
 		image = tf.cast(image_array, tf.float32)
 		image = tf.image.per_image_standardization(image)
 		image = tf.reshape(image, [1, define.IMAGE_W, define.IMAGE_H, 3])
-		logit = model.inference(image, BATCH_SIZE, N_CLASSES)
+		logit = model.inference(image, N_CLASSES)
 
 		logit = tf.nn.softmax(logit)
 
@@ -153,27 +110,66 @@ def test_for_given_image(log_dir, image_file):
 def do_test(images_list, labels_list, epoch = -1):
 	log_dir = vars(FLAGS)['log_dir']
 
-	#print(images_list)
-	batch_size = 8
-	ok_cnt = 0
-	image_cnt = len(images_list)
-	loop_cnt = int(image_cnt / batch_size)
-	if image_cnt % batch_size != 0:
-		loop_cnt += 1
+	with tf.Graph().as_default():
+		if labels_list == None:
+			labels_list = [0 for i in range(len(images_list))]
+		model = get_model()
+		image_batch, label_batch = data_processing.get_batches(images_list, labels_list, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H, is_shuffle = False)
+	
+		logits = model.inference(image_batch, define.N_CLASSES)
+		logits = tf.nn.softmax(logits)
+		correct = model.num_correct_prediction(logits, label_batch)
 
-	predictions = []
-	probablities = []
-	for i in range(loop_cnt):
-		if (vars(FLAGS)['silence'] != True):
-			define.log("*** Testing batch %d, image from %d to %d... ***" % (i, i * batch_size, min((i + 1) * batch_size, image_cnt)))
-		image_batch = images_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		if (labels_list != None):
-			label_batch = labels_list[i * batch_size : min((i + 1) * batch_size, image_cnt)]
-		else:
-	 		label_batch = None
-		pred_batch, prob_batch =  test_for_batch_data(log_dir, image_batch, label_batch, epoch = epoch)
-		predictions.extend(pred_batch)
-		probablities.extend(prob_batch)
+		predictions = []
+		probablities = []
+		saver = tf.train.Saver(tf.global_variables())
+		with tf.Session() as sess:
+			define.log("Reading checkpoints...")
+			ckpt = tf.train.get_checkpoint_state(log_dir)
+			if (epoch == -1):
+				if ckpt and ckpt.model_checkpoint_path:
+					global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+					saver.restore(sess, ckpt.model_checkpoint_path)
+					if (vars(FLAGS)['silence'] != True):
+						define.log('Loading success, global_step is %s' % global_step)
+				else:
+					define.log('No checkpoint file found')
+			else:
+				if ckpt and ckpt.all_model_checkpoint_paths:
+					if epoch > len(ckpt.all_model_checkpoint_paths):
+						define.log("invalid epoch = %d" % epoch)
+						return None, None
+					model_path = ckpt.all_model_checkpoint_paths[epoch]
+					global_step = model_path.split('/')[-1].split('-')[-1]
+					saver.restore(sess, model_path)
+					if (vars(FLAGS)['silence'] != True):
+						define.log('Loading success, global_step is %s' % global_step)
+				else:
+					define.log('No checkpoint file found')
+
+			coord = tf.train.Coordinator()
+			threads = tf.train.start_queue_runners(sess = sess, coord = coord)
+
+			try:
+				define.log('Evaluating the model with %d images......' % len(images_list))
+				num_step = int(math.floor(len(images_list) / define.BATCH_SIZE))
+				num_sample = num_step*define.BATCH_SIZE
+				step = 0
+				total_correct = 0
+				while step < num_step and not coord.should_stop():
+					batch_prob, batch_correct = sess.run([logits, correct])
+					predictions.extend([np.argmax(p) for p in batch_prob])
+					probablities.extend([p[define.DOG] for p in batch_prob])
+					total_correct += np.sum(batch_correct)
+					step += 1
+				print('Total testing samples: %d' %num_sample)
+				print('Total correct predictions: %d' %total_correct)
+				print('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
+			except Exception as e:
+				coord.request_stop(e)
+			finally:
+				coord.request_stop()
+				coord.join(threads)		
 
 	return predictions, probablities
 
@@ -228,8 +224,8 @@ def main(_):
 		test_data_list = log_dir + '/test_list.csv'
 		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
-		#test_images_list = test_images_list[:8]
-		#test_labels_list = test_labels_list[:8]
+		#test_images_list = test_images_list[:16]
+		#test_labels_list = test_labels_list[:16]
 		predictions, probalities = do_test(test_images_list, test_labels_list)
 		image_cnt = len(test_images_list)
 		ok_cnt = get_ok_cnt(test_labels_list, predictions)

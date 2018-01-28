@@ -126,21 +126,21 @@ def get_files_from_oxford_pet_dataset(data_dir):
 	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt + 1:], labels_list[train_cnt + 1:]
 
 
-def get_batches(images_list, labels_list, batch_size, image_width, image_height):
+def get_batches(images_list, labels_list, batch_size, image_width, image_height, is_shuffle = True):
 
 	images = tf.cast(images_list, tf.string)
 	labels = tf.cast(labels_list, tf.int32)
 
-	input_queue = tf.train.slice_input_producer([images, labels])
+	input_queue = tf.train.slice_input_producer([images, labels], shuffle = is_shuffle)
 	labels = input_queue[1]
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 
 	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-	images = tf.image.per_image_standardization(images)
+	#images = tf.image.per_image_standardization(images)
 
 	#print("get_batches():images.shape=%s" % images.shape)
-	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 64, capacity = len(images_list))
+	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)
 
@@ -163,14 +163,19 @@ def main(_):
 	image_w = 300
 	image_h = 300
 
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
-	train_images_list = train_images_list[:10]
-	train_labels_list = train_labels_list[:10]
-	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
+	test_images_list = get_test_data_from_kaggle_dataset(data_dir)
+	test_images_list = test_images_list[:16]
+	test_labels_list = [0 for i in range(16)]
+	print(test_images_list)
+	#train_images_list, train_labels_list, test_images_list, test_labels_list = get_test_data_from_kaggle_dataset(data_dir)	
+	#train_images_list = train_images_list[:10]
+	#train_labels_list = train_labels_list[:10]
+	#print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 	#get_image_info(train_images_list)
 
-	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
+	#image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
+	image_batch, label_batch = get_batches(test_images_list, test_labels_list, batch_size, image_w, image_h)
 	print ("We got image_batch=%s, label_batch=%s" % (image_batch.shape, label_batch.shape))
 
 	if not os.path.exists(output_dir):
