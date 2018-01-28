@@ -127,7 +127,8 @@ def do_test(images_list, labels_list, epoch = -1):
 
 			try:
 				define.log('Evaluating the model with %d images......' % len(images_list))
-				num_step = int(math.floor(len(images_list) / define.BATCH_SIZE))
+				num_step = int(math.ceil(len(images_list) / define.BATCH_SIZE))
+				print("num_step = %d" % num_step)
 				num_sample = num_step*define.BATCH_SIZE
 				step = 0
 				total_correct = 0
