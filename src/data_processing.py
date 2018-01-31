@@ -135,9 +135,13 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	input_queue = tf.train.slice_input_producer([images, labels], shuffle = is_shuffle)
 	labels = input_queue[1]
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
+	#print("images.shape=%s" % tf.shape(images)[0])
 
-	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
-	images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+	max_size = tf.maximum(tf.shape(images)[0], tf.shape(images)[1])
+	images = tf.image.resize_image_with_crop_or_pad(images, max_size, max_size)
+	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
+	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+	#images = tf.image.resize_images(images, [image_width, image_height])
 	images = tf.image.random_brightness(images, max_delta=0.5)
 	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
 	images = tf.image.random_flip_left_right(images)
@@ -151,10 +155,16 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	return image_batch, label_batch
 	
 def get_image_info(images):
+	all_w = []
+	all_h = []
 	for image in images:
 		im = Image.open(image)
-		print("%s -> %s" % (image, im.size))
+		#print("%s -> %s" % (image, im.size))
+		all_w.append(im.size[0])
+		all_h.append(im.size[1])
 		im.close()
+	print("max_w = %d, max_h = %d" % (max(all_w), max(all_h)))
+	
 
 def main(_):
 
@@ -164,8 +174,8 @@ def main(_):
 	output_dir = data_dir + "output/"
 	batch_size = 8
 	batch_num = 2
-	image_w = 300
-	image_h = 300
+	image_w = 500
+	image_h = 500
 
 	#test_images_list = get_test_data_from_kaggle_dataset(data_dir)
 	#test_images_list = test_images_list[:16]
