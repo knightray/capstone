@@ -138,10 +138,10 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 
 	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-	images = tf.image.per_image_standardization(images)
 	images = tf.image.random_brightness(images, max_delta=0.5)
 	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
 	images = tf.image.random_flip_left_right(images)
+	images = tf.image.per_image_standardization(images)
 
 	#print("get_batches():images.shape=%s" % images.shape)
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
