@@ -121,15 +121,21 @@ class SimpleCNN(Model):
 	def __init__(self):
 		pass
 
-	def inference(self, x, n_classes):
+	def inference(self, x, n_classes, is_trainning = True):
+		if is_trainning:
+			keep_prob = 0.5
+		else:
+			keep_prob = 1e-10
+
 		x = self.conv('conv1', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv2', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling2', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv3', x, 64, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling3', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
-		x = tf.nn.dropout(x, 0.5)
+		x = tf.nn.dropout(x, keep_prob)
 		x = self.fc_layer('fc1', x, 128)
+		x = tf.nn.dropout(x, keep_prob)
 		x = self.fc_layer('fc2', x, 128)
 		x = self.softmax_linear('output', x, n_classes)
 		return x

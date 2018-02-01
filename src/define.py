@@ -47,5 +47,20 @@ TYPE_EPOCH_VERIFY_SET = "epoch"
 # Log definition
 #
 import time
+
+lf = None
+
+def init_log():
+	time_stamp = time.strftime("%m%d%H%M%S", time.localtime())
+	lf = open("dac_%s.log" % time_stamp, "w")
+
+def close_log():
+	lf.close()
+
 def log(s):
-	print("%s: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), s))
+	global lf
+
+	content = "%s: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), s)
+	print(content)
+	if lf != None:
+		lf.write("%s\n" % content)
