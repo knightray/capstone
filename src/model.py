@@ -126,9 +126,10 @@ class SimpleCNN(Model):
 		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv2', x, 16, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling2', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
+		x = self.conv('conv3', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
+		x = self.pool('pooling3', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.fc_layer('fc1', x, 128)
 		x = self.fc_layer('fc2', x, 128)
-		x = self.fc_layer('fc3', x, 64)
 		x = self.softmax_linear('output', x, n_classes)
 		return x
 
