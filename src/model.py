@@ -12,7 +12,8 @@ import os
 
 
 class Model(object):
-	def __init__(self):
+	def __init__(self, is_trainning):
+		self.is_trainning = is_trainning
 		pass
 
 	def print_all_variables(self, train_only=True):
@@ -49,17 +50,6 @@ class Model(object):
 			x = tf.nn.avg_pool(x, kernel, strides=stride, padding='SAME', name=layer_name)
 		return x
 
-	def batch_norm(self, x):
-		epsilon = 1e-3
-		batch_mean, batch_var = tf.nn.moments(x, [0])
-		x = tf.nn.batch_normalization(x,
-				mean=batch_mean,
-				variance=batch_var,
-				offset=None,
-				scale=None,
-				variance_epsilon=epsilon)
-		return x
-
 	def fc_layer(self, layer_name, x, out_nodes, is_pretrain = False):
 		shape = x.get_shape()
 		if len(shape) == 4:
@@ -80,6 +70,16 @@ class Model(object):
 
 			x = tf.nn.bias_add(tf.matmul(flat_x, w), b)
 			x = tf.nn.relu(x)
+		return x
+
+	def dropout(self, layer_name, x):
+		if self.is_trainning:
+			keep_prob = define.KEEP_PROB
+		else:
+			keep_prob = 1
+
+		with tf.variable_scope(layer_name):
+			x = tf.nn.dropout(x, keep_prob)
 		return x
 
 	def softmax_linear(self, layer_name, x, out_nodes):
@@ -133,32 +133,27 @@ class Model(object):
 
 
 class SimpleCNN(Model):
-	def __init__(self):
-		pass
+	def __init__(self, is_trainning):
+		Model.__init__(self, is_trainning)
 
-	def inference(self, x, n_classes, is_trainning = True):
-		if is_trainning:
-			keep_prob = 0.5
-		else:
-			keep_prob = 1
-
+	def inference(self, x, n_classes):
 		x = self.conv('conv1', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv2', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling2', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
 		x = self.conv('conv3', x, 64, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling3', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
-		x = tf.nn.dropout(x, keep_prob)
+		x = self.dropout("dropout1", x)
 		x = self.fc_layer('fc1', x, 128)
-		x = tf.nn.dropout(x, keep_prob)
+		x = self.dropout("dropout2", x)
 		x = self.fc_layer('fc2', x, 128)
 		x = self.softmax_linear('output', x, n_classes)
 		return x
 
 class VGG16(Model):
-	def __init__(self, is_pretrain = False):
+	def __init__(self, is_trainning, is_pretrain = False):
+		Model.__init__(self, is_trainning)
 		self.is_pretrain = is_pretrain
-		pass
 
 	def load(self, session):
 		path = define.PRETRAIN_DATA_PATH
@@ -199,22 +194,22 @@ class VGG16(Model):
 		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
 		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = self.is_pretrain)
-		#x = self.batch_norm(x)
 		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = self.is_pretrain)
-		#x = self.batch_norm(x)
 		x = self.fc_layer('fc8', x, out_nodes=1000, is_pretrain = False)		
+		x = self.dropout("dropout1", x)
 		x = self.fc_layer('fc9', x, out_nodes=512)		
+		x = self.dropout("dropout2", x)
 		x = self.fc_layer('fc10', x, out_nodes=256)		
 		x = self.softmax_linear('output', x, n_classes)		
 		return x
 	
 
-def get_model(is_pretrain = False):
+def get_model(is_trainning, is_pretrain = False):
 	model = None
 	if (define.USE_MODEL == 'simple_cnn'):
-		model = SimpleCNN()
+		model = SimpleCNN(is_trainning = is_trainning)
 	elif (define.USE_MODEL == 'vgg16'):
-		model = VGG16(is_pretrain)
+		model = VGG16(is_trainning = is_trainning, is_pretrain = is_pretrain)
 	else:
 		define.log("Unrecorgnized model = %s" % define.USE_MODEL)
 	return model

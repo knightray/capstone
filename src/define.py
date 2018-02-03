@@ -35,6 +35,7 @@ LEARNING_RATE = 0.0001
 USE_MODEL = 'vgg16'
 USE_PRETRAIN = True
 PRETRAIN_DATA_PATH = "./"
+KEEP_PROB = 0.5
 
 # 
 # Test definition

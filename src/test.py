@@ -40,7 +40,7 @@ def test_for_given_image(log_dir, image_file):
 	im = Image.open(image_file)
 	im = im.resize([define.IMAGE_W, define.IMAGE_H])
 	image_array = np.array(im)
-	model = get_model()
+	model = get_model(False)
 
 	with tf.Graph().as_default():
 		BATCH_SIZE = 1
@@ -88,7 +88,7 @@ def do_test(images_list, labels_list, epoch = -1):
 	with tf.Graph().as_default():
 		if labels_list == None:
 			labels_list = [0 for i in range(len(images_list))]
-		model = get_model()
+		model = get_model(False)
 		image_batch, label_batch = data_processing.get_batches(images_list, labels_list, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H, is_shuffle = False)
 	
 		logits = model.inference(image_batch, define.N_CLASSES)
