@@ -8,8 +8,8 @@
 #
 # Image definition
 #
-IMAGE_W = 200
-IMAGE_H = 200
+IMAGE_W = 224
+IMAGE_H = 224
 
 #
 # Directory definition
@@ -32,7 +32,9 @@ N_EPOCH = 6
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 # mode can be set as 'simple_cnn' or 'vgg16'
-USE_MODEL = 'simple_cnn'
+USE_MODEL = 'vgg16'
+USE_PRETRAIN = True
+PRETRAIN_DATA_PATH = "./"
 
 # 
 # Test definition

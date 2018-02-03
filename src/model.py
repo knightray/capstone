@@ -7,11 +7,24 @@
 
 import tensorflow as tf
 import define
+import numpy as np
+import os
 
 
 class Model(object):
 	def __init__(self):
 		pass
+
+	def print_all_variables(self, train_only=True):
+    	# tvar = tf.trainable_variables() if train_only else tf.all_variables()
+		if train_only:
+			t_vars = tf.trainable_variables()
+			define.log("  [*] printing trainable variables")
+		else:
+			t_vars = tf.global_variables()
+			define.log("  [*] printing global variables")
+		for idx, v in enumerate(t_vars):
+			define.log("  var {:3}: {:15}   {}".format(idx, str(v.get_shape()), v.name))
 
 	def conv(self, layer_name, x, out_channels, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain=True):
 		in_channels = x.get_shape()[-1]
@@ -125,7 +138,7 @@ class SimpleCNN(Model):
 		if is_trainning:
 			keep_prob = 0.5
 		else:
-			keep_prob = 1e-10
+			keep_prob = 1
 
 		x = self.conv('conv1', x, 32, kernel_size = [3, 3], stride = [1, 1, 1, 1])
 		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1])
@@ -143,6 +156,20 @@ class SimpleCNN(Model):
 class VGG16(Model):
 	def __init__(self):
 		pass
+
+	def load(self, session):
+		path = define.PRETRAIN_DATA_PATH
+		path = os.path.join(path, "vgg16.npy")
+		data_path = path
+		define.log("We will load pre-trained model from %s... " % path)	
+
+		data_dict = np.load(data_path, encoding='latin1').item()
+		keys = sorted(data_dict.keys())
+		for key in keys:
+			with tf.variable_scope(key, reuse=True):
+				for subkey, data in zip(('weights', 'biases'), data_dict[key]):
+					session.run(tf.get_variable(subkey).assign(data))
+		define.log("model is loaded.")
 
 	def inference(self, x, n_classes):
 		x = self.conv('conv1_1', x, 64, kernel_size=[3,3], stride=[1,1,1,1])
@@ -172,7 +199,7 @@ class VGG16(Model):
 		x = self.batch_norm(x)
 		x = self.fc_layer('fc7', x, out_nodes=4096)
 		x = self.batch_norm(x)
-		#x = self.fc_layer('fc8', x, out_nodes=n_classes)		
+		x = self.fc_layer('fc8', x, out_nodes=1000)		
 		x = self.softmax_linear('output', x, n_classes)		
 		return x
 	
@@ -186,8 +213,22 @@ def get_model():
 	return model
 
 
+def show_value():
+    data_path = './vgg16.npy'
+
+    data_dict = np.load(data_path, encoding='latin1').item()
+    keys = sorted(data_dict.keys())
+    for key in keys:
+        weights = data_dict[key][0]
+        biases = data_dict[key][1]
+        print('\n')
+        print(key)
+        print('weights shape: ', weights.shape)
+        print('biases shape: ', biases.shape)
+
 def main():
-	pass
+	show_value()
+	
 
 
 if __name__ == '__main__':

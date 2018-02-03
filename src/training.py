@@ -30,6 +30,8 @@ def trainning_and_verify(train_images, train_labels, verify_images, verify_label
 	train_op = model.trainning(train_loss, define.LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, y)
 
+	model.print_all_variables()
+
 	logs_dir = vars(FLAGS)['log_dir']
 	if (vars(FLAGS)['max_step'] != 0):
 		max_step = vars(FLAGS)['max_step']
@@ -48,6 +50,9 @@ def trainning_and_verify(train_images, train_labels, verify_images, verify_label
 	sess.run(tf.global_variables_initializer())
 	coord = tf.train.Coordinator()
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+	if (define.USE_PRETRAIN):
+		model.load(sess)
 
 	try:
 		for epoch in range(define.N_EPOCH):
