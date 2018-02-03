@@ -147,10 +147,10 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	images = tf.image.random_flip_left_right(images)
 	images = tf.image.per_image_standardization(images)
 
-	#print("get_batches():images.shape=%s" % images.shape)
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)
+	#print("get_batches():images.shape=%s, label.shape=%s" % (tf.shape(image_batch), tf.shape(label_batch)))
 
 	return image_batch, label_batch
 	

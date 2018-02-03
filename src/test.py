@@ -157,13 +157,10 @@ def main(_):
 	epoch = vars(FLAGS)['epoch']
 
 	#test_for_given_image(log_dir, test_image)
-	test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
+	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg', '/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_2.jpg']
 	#test_images_list = ['/Users/zhangchengke/ml/capstone/data/oxford-pet/images/Maine_Coon_1.jpg']
-	test_labels_list = [1, 1]
+	#test_labels_list = [1, 1]
 	#test_labels_list = [1]
-
-	do_test_with_pretrainned_model(test_images_list, test_labels_list)
-	return 
 
 	if (test_type == define.TYPE_ONE_IMAGE):
 		test_for_given_image(log_dir, test_image)
