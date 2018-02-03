@@ -91,7 +91,7 @@ def do_test(images_list, labels_list, epoch = -1):
 		model = get_model()
 		image_batch, label_batch = data_processing.get_batches(images_list, labels_list, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H, is_shuffle = False)
 	
-		logits = model.inference(image_batch, define.N_CLASSES, False)
+		logits = model.inference(image_batch, define.N_CLASSES)
 		logits = tf.nn.softmax(logits)
 		correct = model.num_correct_prediction(logits, label_batch)
 
