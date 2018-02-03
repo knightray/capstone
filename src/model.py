@@ -26,15 +26,15 @@ class Model(object):
 		for idx, v in enumerate(t_vars):
 			define.log("  var {:3}: {:15}   {}".format(idx, str(v.get_shape()), v.name))
 
-	def conv(self, layer_name, x, out_channels, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain=True):
+	def conv(self, layer_name, x, out_channels, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain=False):
 		in_channels = x.get_shape()[-1]
 		with tf.variable_scope(layer_name):
 			w = tf.get_variable(name='weights',
-					trainable=is_pretrain,
+					trainable=not is_pretrain,
 					shape=[kernel_size[0], kernel_size[1], in_channels, out_channels],
 					initializer=tf.contrib.layers.xavier_initializer())
 			b = tf.get_variable(name='biases',
-					trainable=is_pretrain,
+					trainable=not is_pretrain,
 					shape=[out_channels],
 					initializer=tf.constant_initializer(0.0))
 			x = tf.nn.conv2d(x, w, stride, padding='SAME', name='conv')
@@ -60,7 +60,7 @@ class Model(object):
 				variance_epsilon=epsilon)
 		return x
 
-	def fc_layer(self, layer_name, x, out_nodes):
+	def fc_layer(self, layer_name, x, out_nodes, is_pretrain = False):
 		shape = x.get_shape()
 		if len(shape) == 4:
 			size = shape[1].value * shape[2].value * shape[3].value
@@ -69,9 +69,11 @@ class Model(object):
 
 		with tf.variable_scope(layer_name):
 			w = tf.get_variable('weights',
+					trainable=not is_pretrain,
 					shape=[size, out_nodes],
 					initializer=tf.contrib.layers.xavier_initializer())
 			b = tf.get_variable('biases',
+					trainable=not is_pretrain,
 					shape=[out_nodes],
 					initializer=tf.constant_initializer(0.0))
 			flat_x = tf.reshape(x, [-1, size]) # flatten into 1D
@@ -154,7 +156,8 @@ class SimpleCNN(Model):
 		return x
 
 class VGG16(Model):
-	def __init__(self):
+	def __init__(self, is_pretrain = False):
+		self.is_pretrain = is_pretrain
 		pass
 
 	def load(self, session):
@@ -205,12 +208,14 @@ class VGG16(Model):
 		return x
 	
 
-def get_model():
+def get_model(is_pretrain = False):
 	model = None
 	if (define.USE_MODEL == 'simple_cnn'):
 		model = SimpleCNN()
+	elif (define.USE_MODEL == 'vgg16'):
+		model = VGG16(is_pretrain)
 	else:
-		model = VGG16()
+		define.log("Unrecorgnized model = %s" % define.USE_MODEL)
 	return model
 
 

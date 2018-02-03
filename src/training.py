@@ -17,7 +17,7 @@ FLAGS = None
 
 def trainning_and_verify(train_images, train_labels, verify_images, verify_labels):
 
-	model = get_model()
+	model = get_model(define.USE_PRETRAIN)
 	train_image_batch, train_label_batch = data_processing.get_batches(train_images, train_labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	verify_image_batch, verify_label_batch = data_processing.get_batches(verify_images, verify_labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
