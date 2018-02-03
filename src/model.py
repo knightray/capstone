@@ -199,7 +199,8 @@ class VGG16(Model):
 		x = self.batch_norm(x)
 		x = self.fc_layer('fc7', x, out_nodes=4096)
 		x = self.batch_norm(x)
-		x = self.fc_layer('fc8', x, out_nodes=1000)		
+		x = self.fc_layer('fc8', x, out_nodes=512)		
+		x = self.fc_layer('fc9', x, out_nodes=128)		
 		x = self.softmax_linear('output', x, n_classes)		
 		return x
 	
