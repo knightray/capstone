@@ -128,7 +128,6 @@ def do_test(images_list, labels_list, epoch = -1):
 			try:
 				define.log('Evaluating the model with %d images......' % len(images_list))
 				num_step = int(math.ceil(len(images_list) / define.BATCH_SIZE))
-				print("num_step = %d" % num_step)
 				num_sample = num_step*define.BATCH_SIZE
 				step = 0
 				total_correct = 0
@@ -176,7 +175,7 @@ def main(_):
 		f = open("dogs_vs_cats_submission_%s.csv" % time_stamp, "w")
 		f.write("id,label\n")
 		for image, p in zip(test_images_list, probalities):
-			f.write("%s,%.1f\n" % (image.split('/')[-1].split('.')[0], p))
+			f.write("%s,%.3f\n" % (image.split('/')[-1].split('.')[0], p))
 		f.close()
 
 	elif (test_type == define.TYPE_EPOCH_VERIFY_SET):
