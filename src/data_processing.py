@@ -14,6 +14,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import define
+import csv
 from PIL import Image
 
 FLAGS = None
@@ -154,15 +155,26 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 
 	return image_batch, label_batch
 	
-def get_image_info(images):
+def get_image_info(data_dir):
+
+	images_dir = data_dir + 'train/'
+	images = os.listdir(images_dir)
+
 	all_w = []
 	all_h = []
 	for image in images:
-		im = Image.open(image)
+		im = Image.open(images_dir + image)
 		#print("%s -> %s" % (image, im.size))
 		all_w.append(im.size[0])
 		all_h.append(im.size[1])
 		im.close()
+
+	with open("imageinfo.csv", 'w', newline='') as f:
+		writer = csv.writer(f)
+		for image, w, h in zip(images, all_w, all_h):
+			w_h = "%.2f" % (w/h)
+			writer.writerow([w, h, w_h])
+
 	print("max_w = %d, max_h = %d" % (max(all_w), max(all_h)))
 	
 
@@ -182,11 +194,11 @@ def main(_):
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
 	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
-	train_images_list = train_images_list[:10]
-	train_labels_list = train_labels_list[:10]
+	#train_images_list = train_images_list[:10]
+	#train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
-	#get_image_info(train_images_list)
+	get_image_info(data_dir)
 
 	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
 	#image_batch, label_batch = get_batches(test_images_list, test_labels_list, batch_size, image_w, image_h)

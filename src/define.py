@@ -37,6 +37,10 @@ USE_PRETRAIN = True
 PRETRAIN_DATA_PATH = "./"
 KEEP_PROB = 0.5
 
+TYPE_NORMAL = 'normal'
+TYPE_GB = 'generate_bottlenecks'
+TYPE_TB = 'train_by_bottlenecks'
+
 # 
 # Test definition
 #
