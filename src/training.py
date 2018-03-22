@@ -220,7 +220,7 @@ def generate_bottlenecks(images, labels, typestr):
 	
 		bottlenecks = model.generate_bottlenecks(image_batch)
 		max_step = int(len(images) / define.BATCH_SIZE)	
-		#max_step = 10
+		#max_step = define.BATCH_SIZE * 20
 		sess = tf.Session()
 
 		sess.run(tf.global_variables_initializer())
