@@ -200,7 +200,7 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 					tra_losses = []
 					tra_accs = []
 
-			define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
+			#define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 			checkpoint_path = os.path.join(logs_dir, 'model_%s.ckpt' % define.USE_MODEL)
 			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
 
@@ -208,7 +208,7 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 			verify_losses = []
 			verify_accs = []
 			for vi in range(100):
-				verify_batch_no = random.randint(0,1000)
+				verify_batch_no = random.randint(0,600)
 				verify_bottlenecks_batch = verify_bottlenecks['bottlnecks_batch%d' % verify_batch_no]
 				verify_labels_batch = verify_bottlenecks['labels_batch%d' % verify_batch_no]
 				_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})
