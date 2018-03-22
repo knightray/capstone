@@ -143,7 +143,7 @@ def training(images, labels):
 	coord.join(threads)
 	sess.close()
 
-def train_by_bottlenecks(train_bottlenecks, train_labels, verify_bottlenecks, verify_labels):
+def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 
 	model = get_model(True, False)
 	x = tf.placeholder(tf.float32, shape = [define.BATCH_SIZE, 7, 7, 512], name = "x")
@@ -160,7 +160,7 @@ def train_by_bottlenecks(train_bottlenecks, train_labels, verify_bottlenecks, ve
 	if (vars(FLAGS)['max_step'] != 0):
 		max_step = vars(FLAGS)['max_step']
 	else:
-		max_step = len(train_bottlenecks) 
+		max_step = int(len(train_bottlenecks) / 2)
 	
 	define.log("Do trainning for %d step in one epoch." % max_step)
 	if not os.path.exists(logs_dir):
@@ -185,7 +185,7 @@ def train_by_bottlenecks(train_bottlenecks, train_labels, verify_bottlenecks, ve
 					break
 
 				tra_bottlenecks_batch = train_bottlenecks['bottlnecks_batch%d' % step]
-				tra_labels_batch = train_labels[step * define.BATCH_SIZE: (step + 1) * define.BATCH_SIZE]
+				tra_labels_batch = train_bottlenecks['labels_batch%d' % step]
 				_, tra_loss, tra_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict = {x:tra_bottlenecks_batch, y:tra_labels_batch})
 
 				if step % 100 == 0:
@@ -199,7 +199,7 @@ def train_by_bottlenecks(train_bottlenecks, train_labels, verify_bottlenecks, ve
 
 			define.log(" Verify at verify set...")
 			verify_bottlenecks_batch = verify_bottlenecks['bottlnecks_batch0']
-			verify_labels_batch = verify_labels[0:define.BATCH_SIZE]
+			verify_labels_batch = verify_bottlenecks['labels_batch0']
 			_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})
 			define.log(' verify loss = %.2f, verify accuracy = %.2f%%' %(verify_loss, verify_acc*100.0))
 
@@ -220,7 +220,7 @@ def generate_bottlenecks(images, labels, typestr):
 	
 		bottlenecks = model.generate_bottlenecks(image_batch)
 		max_step = int(len(images) / define.BATCH_SIZE)	
-		#max_step = 2
+		#max_step = 10
 		sess = tf.Session()
 
 		sess.run(tf.global_variables_initializer())
@@ -236,9 +236,13 @@ def generate_bottlenecks(images, labels, typestr):
 				if coord.should_stop():
 					break
 
+				images_vals, labels_vals = sess.run([image_batch, label_batch])
+				#print(labels_vals)
 				bottlenecks_vals = sess.run(bottlenecks)
 				bdata = f.create_dataset('bottlnecks_batch%d' % step, data = bottlenecks_vals)
-				print("***step = %d shape=%s***" % (step, bottlenecks_vals.shape))
+				ldata = f.create_dataset('labels_batch%d' % step, data = labels_vals)
+				if step % 100 == 0:
+					define.log("***step = %d : shape=%s***" % (step, bottlenecks_vals.shape))
 				#print(bottlenecks_vals)
 
 		except tf.errors.OutOfRangeError:
@@ -286,12 +290,12 @@ def main(_):
 		bottlenecks_verify = read_bottlenecks('bottlenecks_verify.hdf5')
 		bottlenecks_train = read_bottlenecks('bottlenecks_train.hdf5')
 
-		train_data_list = log_dir + '/train_list.csv'
-		train_images_list, train_labels_list = data_processing.load_list(train_data_list)
-		test_data_list = log_dir + '/test_list.csv'
-		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
+		#train_data_list = log_dir + '/train_list.csv'
+		#train_images_list, train_labels_list = data_processing.load_list(train_data_list)
+		#test_data_list = log_dir + '/test_list.csv'
+		#test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 
-		train_by_bottlenecks(bottlenecks_train, train_labels_list, bottlenecks_verify, test_labels_list)
+		train_by_bottlenecks(bottlenecks_train, bottlenecks_verify)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
