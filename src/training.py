@@ -13,6 +13,7 @@ import os
 import h5py
 import numpy as np
 import define
+import random
 from model import get_model 
 
 FLAGS = None
@@ -198,8 +199,9 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 			saver.save(sess, checkpoint_path, global_step=(epoch + 1)*max_step)
 
 			define.log(" Verify at verify set...")
-			verify_bottlenecks_batch = verify_bottlenecks['bottlnecks_batch0']
-			verify_labels_batch = verify_bottlenecks['labels_batch0']
+			verify_batch_no = random.randint(0,100)
+			verify_bottlenecks_batch = verify_bottlenecks['bottlnecks_batch%d' % verify_batch_no]
+			verify_labels_batch = verify_bottlenecks['labels_batch%d' % verify_batch_no]
 			_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})
 			define.log(' verify loss = %.2f, verify accuracy = %.2f%%' %(verify_loss, verify_acc*100.0))
 
