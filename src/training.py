@@ -236,7 +236,7 @@ def generate_bottlenecks(images, labels, typestr):
 				if coord.should_stop():
 					break
 
-				bottlenecks_vals, images_vals, labels_vals = sess.run([image_batch, label_batch, bottlenecks])
+				images_vals, labels_vals, bottlenecks_vals = sess.run([image_batch, label_batch, bottlenecks])
 				#print(labels_vals)
 				#bottlenecks_vals = sess.run(bottlenecks)
 				bdata = f.create_dataset('bottlnecks_batch%d' % step, data = bottlenecks_vals)
