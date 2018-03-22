@@ -194,11 +194,11 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 				tra_losses.append(tra_loss)
 				tra_accs.append(tra_acc)
 				if step % 100 == 0:
-					tra_losses = []
-					tra_accs = []
 					define.log(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, sum(tra_losses)/len(tra_losses), sum(tra_accs)/len(tra_accs)*100.0))
 					summary_str = sess.run(summary_op, feed_dict = {x:tra_bottlenecks_batch, y:tra_labels_batch})
 					train_writer.add_summary(summary_str, step)
+					tra_losses = []
+					tra_accs = []
 
 			define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 			checkpoint_path = os.path.join(logs_dir, 'model_%s.ckpt' % define.USE_MODEL)
