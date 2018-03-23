@@ -287,18 +287,22 @@ def main(_):
 		#training(train_images_list, train_labels_list)
 		trainning_and_verify(train_images_list, train_labels_list, test_images_list, test_labels_list)
 	elif ttype == define.TYPE_GB:
-		train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
-		define.log("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
+		train_images_list, train_labels_list, verify_images_list, verify_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
+		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
+		define.log("We got %d images for training, %d images for verify, %d images for test." % (len(train_images_list), len(verify_images_list), len(test_images_list)))
 
 		define.log("We will generate bottlenecks for train set...")
 		generate_bottlenecks(train_images_list, train_labels_list, "train")
 		define.log("We will generate bottlenecks for verify set...")
-		generate_bottlenecks(test_images_list, test_labels_list, "verify")
+		generate_bottlenecks(verify_images_list, verify_labels_list, "verify")
+		define.log("We will generate bottlenecks for test set...")
+		test_labels_list = [0 for i in range(len(test_images_list))]
+		generate_bottlenecks(test_images_list, test_labels_list, "test")
 
 		train_data_list = log_dir + '/train_list.csv'
 		data_processing.save_list(train_images_list, train_labels_list, train_data_list)
 		test_data_list = log_dir + '/test_list.csv'
-		data_processing.save_list(test_images_list, test_labels_list, test_data_list)
+		data_processing.save_list(verify_images_list, verify_labels_list, verify_data_list)
 	elif ttype == define.TYPE_TB:
 		bottlenecks_verify = read_bottlenecks('bottlenecks_verify.hdf5')
 		bottlenecks_train = read_bottlenecks('bottlenecks_train.hdf5')

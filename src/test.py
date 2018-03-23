@@ -14,6 +14,7 @@ from PIL import Image
 import define
 import time
 import math
+import h5py
 from model import get_model
 
 FLAGS = None
@@ -79,6 +80,78 @@ def test_for_given_image(log_dir, image_file):
 			else:
 				if (vars(FLAGS)['silence'] != True):
 					define.log('This is a dog with possibility %.6f' %prediction[:, 1])	
+
+def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
+	log_dir = vars(FLAGS)['log_dir']
+
+	if (epoch != -1):
+		define.log("We will test our model after %d epoch." % epoch)
+	with tf.Graph().as_default():
+		num_step = int(len(test_bottlenecks) / 2)
+		model = get_model(False)
+	
+		x = tf.placeholder(tf.float32, shape = [define.BATCH_SIZE, 7, 7, 512], name = "x")
+		y = tf.placeholder(tf.int32, shape = [define.BATCH_SIZE], name = "y")
+
+		logits = model.inference_with_bottlenecks(x, define.N_CLASSES)
+		logits = tf.nn.softmax(logits)
+		correct = model.num_correct_prediction(logits, y)
+
+		predictions = []
+		probablities = []
+		saver = tf.train.Saver(tf.global_variables())
+		with tf.Session() as sess:
+			define.log("Reading checkpoints...")
+			ckpt = tf.train.get_checkpoint_state(log_dir)
+			if (epoch == -1):
+				if ckpt and ckpt.model_checkpoint_path:
+					global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+					saver.restore(sess, ckpt.model_checkpoint_path)
+					if (vars(FLAGS)['silence'] != True):
+						define.log('Loading success, global_step is %s' % global_step)
+				else:
+					define.log('No checkpoint file found')
+			else:
+				if ckpt and ckpt.all_model_checkpoint_paths:
+					if epoch > len(ckpt.all_model_checkpoint_paths):
+						define.log("invalid epoch = %d" % epoch)
+						return None, None
+					model_path = ckpt.all_model_checkpoint_paths[epoch]
+					global_step = model_path.split('/')[-1].split('-')[-1]
+					saver.restore(sess, model_path)
+					if (vars(FLAGS)['silence'] != True):
+						define.log('Loading success, global_step is %s' % global_step)
+				else:
+					define.log('No checkpoint file found')
+
+			coord = tf.train.Coordinator()
+			threads = tf.train.start_queue_runners(sess = sess, coord = coord)
+
+			try:
+				num_sample = num_step*define.BATCH_SIZE
+				define.log('Evaluating the model with %d images......' % num_sample)
+				step = 0
+				total_correct = 0
+				while step < num_step and not coord.should_stop():
+
+					bottlenecks_batch = test_bottlenecks['bottlnecks_batch%d' % step]
+					labels_batch = test_bottlenecks['labels_batch%d' % step]
+					batch_prob, batch_correct = sess.run([logits, correct], feed_dict = {x:bottlenecks_batch, y:labels_batch})
+					predictions.extend([np.argmax(p) for p in batch_prob])
+					probablities.extend([p[define.DOG] for p in batch_prob])
+					total_correct += np.sum(batch_correct)
+					step += 1
+				define.log('Total testing samples: %d' %num_sample)
+				define.log('Total correct predictions: %d' %total_correct)
+				define.log('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
+			except Exception as e:
+				coord.request_stop(e)
+			finally:
+				coord.request_stop()
+				coord.join(threads)		
+
+	return predictions, probablities
+
 
 def do_test(images_list, labels_list, epoch = -1):
 	log_dir = vars(FLAGS)['log_dir']
@@ -163,6 +236,20 @@ def main(_):
 
 	if (test_type == define.TYPE_ONE_IMAGE):
 		test_for_given_image(log_dir, test_image)
+
+	elif (test_type == define.TYPE_TEST_SET_BY_BOTTLENECKS):
+		if (vars(FLAGS)['silence'] != True):
+			define.log("We will evaluate our model by test data set...")
+	
+		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
+		test_bottlenecks = h5py.File("bottlenecks_test.hdf5", 'r')
+		predictions, probalities = do_test_by_bottlenecks(test_bottlenecks, epoch = epoch)
+		time_stamp = time.strftime("%m%d%H%M%S", time.localtime())
+		f = open("dogs_vs_cats_submission_%s.csv" % time_stamp, "w")
+		f.write("id,label\n")
+		for image, p in zip(test_images_list, probalities):
+			f.write("%s,%.3f\n" % (image.split('/')[-1].split('.')[0], p))
+		f.close()
 
 	elif (test_type == define.TYPE_TEST_SET):
 		if (vars(FLAGS)['silence'] != True):
