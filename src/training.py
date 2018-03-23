@@ -194,7 +194,7 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 				tra_losses.append(tra_loss)
 				tra_accs.append(tra_acc)
 				if step % 100 == 0:
-					define.log(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, sum(tra_losses)/len(tra_losses), sum(tra_accs)/len(tra_accs)*100.0))
+					define.log(' Step %d, train loss = %.3f, train accuracy = %.3f%%' %(step, sum(tra_losses)/len(tra_losses), sum(tra_accs)/len(tra_accs)*100.0))
 					summary_str = sess.run(summary_op, feed_dict = {x:tra_bottlenecks_batch, y:tra_labels_batch})
 					train_writer.add_summary(summary_str, step)
 					tra_losses = []
@@ -214,7 +214,7 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 				_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})
 				verify_losses.append(verify_loss)
 				verify_accs.append(verify_acc)
-			define.log(' verify loss = %.2f, verify accuracy = %.2f%%' %(sum(verify_losses)/len(verify_losses), sum(verify_accs)/len(verify_accs)*100.0))
+			define.log(' verify loss = %.3f, verify accuracy = %.3f%%' %(sum(verify_losses)/len(verify_losses), sum(verify_accs)/len(verify_accs)*100.0))
 
 			define.log("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
 
