@@ -14,6 +14,7 @@ import h5py
 import numpy as np
 import define
 import random
+import math
 from model import get_model 
 
 FLAGS = None
