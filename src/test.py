@@ -95,6 +95,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 
 		logits = model.inference_with_bottlenecks(x, define.N_CLASSES)
 		logits = tf.nn.softmax(logits)
+		loss = model.losses(logits, y)
 		correct = model.num_correct_prediction(logits, y)
 
 		predictions = []
@@ -132,17 +133,20 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 				define.log('Evaluating the model with %d images......' % num_sample)
 				step = 0
 				total_correct = 0
+				total_loss = 0
 				while step < num_step and not coord.should_stop():
 
 					bottlenecks_batch = test_bottlenecks['bottlnecks_batch%d' % step]
 					labels_batch = test_bottlenecks['labels_batch%d' % step]
-					batch_prob, batch_correct = sess.run([logits, correct], feed_dict = {x:bottlenecks_batch, y:labels_batch})
+					batch_prob, batch_correct, batch_loss = sess.run([logits, correct, loss], feed_dict = {x:bottlenecks_batch, y:labels_batch})
 					predictions.extend([np.argmax(p) for p in batch_prob])
 					probablities.extend([p[define.DOG] for p in batch_prob])
 					total_correct += np.sum(batch_correct)
+					total_loss += batch_loss
 					step += 1
 				define.log('Total testing samples: %d' %num_sample)
 				define.log('Total correct predictions: %d' %total_correct)
+				define.log('Total loss: %.3f' % total_loss / num_step)
 				define.log('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
 			except Exception as e:
 				coord.request_stop(e)
