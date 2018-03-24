@@ -133,7 +133,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 				define.log('Evaluating the model with %d images......' % num_sample)
 				step = 0
 				total_correct = 0
-				total_loss = 0
+				total_loss = 0.0
 				while step < num_step and not coord.should_stop():
 
 					bottlenecks_batch = test_bottlenecks['bottlnecks_batch%d' % step]
@@ -146,7 +146,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 					step += 1
 				define.log('Total testing samples: %d' %num_sample)
 				define.log('Total correct predictions: %d' %total_correct)
-				define.log('Total loss: %.3f' % total_loss / num_step)
+				define.log('Total loss: %.3f' % (total_loss / num_step))
 				define.log('Average accuracy: %.2f%%' %(100*total_correct/num_sample))
 			except Exception as e:
 				coord.request_stop(e)
