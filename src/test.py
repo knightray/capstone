@@ -244,7 +244,7 @@ def main(_):
 		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
 		test_bottlenecks = h5py.File("bottlenecks_verify.hdf5", 'r')
 
-		predictions, probalities = do_test_by_bottlenecks(test_images_list, test_labels_list, epoch = epoch)
+		predictions, probalities = do_test_by_bottlenecks(test_bottlenecks, epoch = epoch)
 		image_cnt = len(test_images_list)
 		ok_cnt = get_ok_cnt(test_labels_list, predictions)
 		log_loss = get_log_loss(test_labels_list, probalities)
