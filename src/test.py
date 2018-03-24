@@ -261,6 +261,7 @@ def main(_):
 		f = open("dogs_vs_cats_submission_%s.csv" % time_stamp, "w")
 		f.write("id,label\n")
 		for image, p in zip(test_images_list, probalities):
+			p = p.clip(min=0.005, max=0.995)
 			f.write("%s,%.3f\n" % (image.split('/')[-1].split('.')[0], p))
 		f.close()
 
