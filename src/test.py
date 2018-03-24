@@ -237,6 +237,20 @@ def main(_):
 	if (test_type == define.TYPE_ONE_IMAGE):
 		test_for_given_image(log_dir, test_image)
 
+	elif (test_type == define.TYPE_VERIFY_SET_BY_BOTTLENECKS):
+		if (vars(FLAGS)['silence'] != True):
+			define.log("We will evaluate model by verify data set...")
+		test_data_list = log_dir + '/test_list.csv'
+		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
+		test_bottlenecks = h5py.File("bottlenecks_verify.hdf5", 'r')
+
+		predictions, probalities = do_test_by_bottlenecks(test_images_list, test_labels_list, epoch = epoch)
+		image_cnt = len(test_images_list)
+		ok_cnt = get_ok_cnt(test_labels_list, predictions)
+		log_loss = get_log_loss(test_labels_list, probalities)
+
+		define.log("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
+
 	elif (test_type == define.TYPE_TEST_SET_BY_BOTTLENECKS):
 		if (vars(FLAGS)['silence'] != True):
 			define.log("We will evaluate our model by test data set...")
