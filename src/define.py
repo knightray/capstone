@@ -46,6 +46,7 @@ TYPE_TB = 'train_by_bottlenecks'
 #
 TYPE_ONE_IMAGE = "image"
 TYPE_VERIFY_SET = "verify"
+TYPE_VERIFY_SET_BY_BOTTLENECKS = "verifyb"
 TYPE_TEST_SET = "test"
 TYPE_TEST_SET_BY_BOTTLENECKS = "testb"
 TYPE_EPOCH_VERIFY_SET = "epoch"
