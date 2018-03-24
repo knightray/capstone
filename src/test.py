@@ -245,11 +245,6 @@ def main(_):
 		test_bottlenecks = h5py.File("bottlenecks_verify.hdf5", 'r')
 
 		predictions, probalities = do_test_by_bottlenecks(test_bottlenecks, epoch = epoch)
-		image_cnt = len(test_images_list)
-		ok_cnt = get_ok_cnt(test_labels_list, predictions)
-		log_loss = get_log_loss(test_labels_list, probalities)
-
-		define.log("****** AVERAGE ACCURCY = %.6f, OK COUNT = %d, LOG LOSS = %.6f  *******" % (ok_cnt / image_cnt, ok_cnt, log_loss))
 
 	elif (test_type == define.TYPE_TEST_SET_BY_BOTTLENECKS):
 		if (vars(FLAGS)['silence'] != True):

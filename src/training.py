@@ -229,7 +229,10 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 def generate_bottlenecks(images, labels, typestr):
 	with tf.Graph().as_default():
 		model = get_model(True, define.USE_PRETRAIN)
-		image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
+		if typestr == 'test':
+			image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H, is_shuffle = False)
+		else:
+			image_batch, label_batch = data_processing.get_batches(images, labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
 		bottlenecks = model.generate_bottlenecks(image_batch)
 		max_step = int(len(images) / define.BATCH_SIZE)	
