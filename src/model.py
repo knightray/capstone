@@ -198,13 +198,13 @@ class VGG16(Model):
 		return x
 
 	def inference_with_bottlenecks(self, x, n_classes):
-		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = self.is_pretrain)
-		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = self.is_pretrain)
+		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = False)
+		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = False)
 		x = self.fc_layer('fc8', x, out_nodes=1000, is_pretrain = False)		
 		x = self.dropout("dropout1", x)
-		x = self.fc_layer('fc9', x, out_nodes=512)		
+		x = self.fc_layer('fc9', x, out_nodes=512, is_pretrain = False)		
 		x = self.dropout("dropout2", x)
-		x = self.fc_layer('fc10', x, out_nodes=256)		
+		x = self.fc_layer('fc10', x, out_nodes=256, is_pretrain = False)		
 		x = self.softmax_linear('output', x, n_classes)		
 		return x
 
