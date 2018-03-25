@@ -90,7 +90,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 		num_step = int(len(test_bottlenecks) / 2)
 		model = get_model(False)
 	
-		x = tf.placeholder(tf.float32, shape = [define.BATCH_SIZE, 7, 7, 512], name = "x")
+		x = tf.placeholder(tf.float32, shape = define.BOTTLENECKS_SHAPE, name = "x")
 		y = tf.placeholder(tf.int32, shape = [define.BATCH_SIZE], name = "y")
 
 		logits = model.inference_with_bottlenecks(x, define.N_CLASSES)

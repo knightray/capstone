@@ -36,6 +36,7 @@ USE_MODEL = 'vgg16'
 USE_PRETRAIN = True
 PRETRAIN_DATA_PATH = "./"
 KEEP_PROB = 0.5
+BOTTLENECKS_SHAPE = [BATCH_SIZE, 14, 14, 512]
 
 TYPE_NORMAL = 'normal'
 TYPE_GB = 'generate_bottlenecks'

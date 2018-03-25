@@ -154,9 +154,9 @@ class VGG16(Model):
 	def __init__(self, is_trainning, is_pretrain = False):
 		Model.__init__(self, is_trainning)
 		self.is_pretrain = is_pretrain
-		self.unload = ['fc6', 'fc7', 'fc8']
+		self.bottlenecks = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1', 'conv3_2', 'conv3_3', 'conv4_1', 'conv4_2', 'conv4_3']
 
-	def load(self, session):
+	def load(self, session, is_bottlenecks):
 		path = define.PRETRAIN_DATA_PATH
 		path = os.path.join(path, "vgg16.npy")
 		data_path = path
@@ -165,11 +165,16 @@ class VGG16(Model):
 		data_dict = np.load(data_path, encoding='latin1').item()
 		keys = sorted(data_dict.keys())
 		for key in keys:
-			if key in self.unload:
-				continue
-			with tf.variable_scope(key, reuse=True):
-				for subkey, data in zip(('weights', 'biases'), data_dict[key]):
-					session.run(tf.get_variable(subkey).assign(data))
+			if is_bottlenecks and key in self.bottlenecks:
+				with tf.variable_scope(key, reuse=True):
+					define.log("loading layer: %s" % key)
+					for subkey, data in zip(('weights', 'biases'), data_dict[key]):
+						session.run(tf.get_variable(subkey).assign(data))
+			elif not is_bottlenecks and key not in self.bottlenecks:
+				with tf.variable_scope(key, reuse=True):
+					define.log("loading layer: %s" % key)
+					for subkey, data in zip(('weights', 'biases'), data_dict[key]):
+						session.run(tf.get_variable(subkey).assign(data))
 		define.log("model is loaded.")
 
 	def generate_bottlenecks(self, x):
@@ -191,13 +196,18 @@ class VGG16(Model):
 		x = self.conv('conv4_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
-		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+		#x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		#x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		#x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		#x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 		return x
 
 	def inference_with_bottlenecks(self, x, n_classes):
+		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+
 		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = False)
 		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = False)
 		x = self.fc_layer('fc8', x, out_nodes=1000, is_pretrain = False)		

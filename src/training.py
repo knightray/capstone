@@ -147,8 +147,8 @@ def training(images, labels):
 
 def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 
-	model = get_model(True, False)
-	x = tf.placeholder(tf.float32, shape = [define.BATCH_SIZE, 7, 7, 512], name = "x")
+	model = get_model(True, define.USE_PRETRAIN)
+	x = tf.placeholder(tf.float32, shape = define.BOTTLENECKS_SHAPE, name = "x")
 	y = tf.placeholder(tf.int32, shape = [define.BATCH_SIZE], name = "y")
 
 	train_logits = model.inference_with_bottlenecks(x, define.N_CLASSES)
@@ -177,8 +177,8 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 	coord = tf.train.Coordinator()
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
-	#if (define.USE_PRETRAIN):
-	#	model.load(sess)
+	if (define.USE_PRETRAIN):
+		model.load(sess, False)
 
 	tra_losses = []
 	tra_accs = []
@@ -245,7 +245,7 @@ def generate_bottlenecks(images, labels, typestr):
 		threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 		if (define.USE_PRETRAIN):
-			model.load(sess)
+			model.load(sess, True)
 
 		f = h5py.File("bottlenecks_%s.hdf5" % typestr, "w")
 		try:
