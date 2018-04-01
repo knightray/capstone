@@ -163,22 +163,23 @@ class InceptionResnetV2(Model):
 
 		return x
 
-	def load(self, session):
+	def generate_bottlenecks(self, x):
+		with slim.arg_scope(inception_resnet_v2_arg_scope()):
+			x, end_points = inception_resnet_v2(x, num_classes = define.N_CLASSES, is_training = False)	
+
+		return end_points['PreLogitsFlatten']
+
+	def inference_with_bottlenecks(self, x, n_classes):
+		x = self.fc_layer('fc', x, out_nodes=1536, is_pretrain = False)		
+		x = self.softmax_linear('output', x, n_classes)		
+		return x
+
+	def load(self, session, is_bottlenecks = False):
 		checkpoint_file = './inception_resnet_v2_2016_08_30.ckpt'
 		define.log("We will load pre-trained model from %s... " % checkpoint_file)	
 		
-		#saver = tf.train.Saver()
-		#saver.restore(session, checkpoint_file)
-
 		#Define the scopes that you want to exclude for restoration
-		exclude = ['InceptionResnetV2/Logits', 
-			'InceptionResnetV2/AuxLogits' 
-		#	'InceptionResnetV2/Repeat_1/block17_5/Branch_1/Conv2d_0b_1x7/weights/Adam_1',
-		#	'InceptionResnetV2/Repeat_1/block17_3/Branch_0/Conv2d_1x1/weights/Adam_1',
-		#	'InceptionResnetV2/Block8/Branch_0/Conv2d_1x1/BatchNorm/beta/Adam',
-		#	'InceptionResnetV2/Mixed_6a/Branch_1/Conv2d_0a_1x1/BatchNorm/beta/Adam_1',
-		#	'InceptionResnetV2/Block8/Branch_0/Conv2d_1x1/weights/Adam'
-		]
+		exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits' ]
 		variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
 
 		saver = tf.train.Saver(variables_to_restore)
