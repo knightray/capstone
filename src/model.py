@@ -161,11 +161,22 @@ class InceptionResnetV2(Model):
 		with slim.arg_scope(inception_resnet_v2_arg_scope()):
 			x, end_points = inception_resnet_v2(x, num_classes = n_classes, is_training = True)	
 
+		return x
+
+	def load(self, session):
+		path = define.PRETRAIN_DATA_PATH
+		path = os.path.join(path, "inception_resnet_v2_2016_08_30.ckpt")
+		data_path = path
+		define.log("We will load pre-trained model from %s... " % path)	
+		
 		#Define the scopes that you want to exclude for restoration
 		exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
 		variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
 
-		return x
+		saver = tf.train.Saver(variables_to_restore)
+		saver.restore(sess, checkpoint_file)		
+		define.log("model is loaded.")
+
 
 class VGG16(Model):
 	def __init__(self, is_trainning, is_pretrain = False):
