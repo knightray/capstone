@@ -176,6 +176,10 @@ class InceptionResnetV2(Model):
 		return x
 
 	def load(self, session, is_bottlenecks = False):
+
+		if (is_bottlenecks):
+			return
+
 		checkpoint_file = './inception_resnet_v2_2016_08_30.ckpt'
 		define.log("We will load pre-trained model from %s... " % checkpoint_file)	
 		
