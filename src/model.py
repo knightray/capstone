@@ -9,6 +9,7 @@ import tensorflow as tf
 import define
 import numpy as np
 import os
+from tensorflow.contrib.framework.python.ops.variables import get_or_create_global_step
 from inception_resnet_v2 import inception_resnet_v2, inception_resnet_v2_arg_scope
 
 slim = tf.contrib.slim
@@ -113,8 +114,20 @@ class Model(object):
 		return loss
 
 	def trainning(self, loss, learning_rate):
+		num_epochs_before_decay = 2
+		num_steps_per_epoch = 2500
+		learning_rate_decay_factor = 0.7
+		decay_steps = int(num_epochs_before_decay * num_steps_per_epoch)
+		global_step = get_or_create_global_step()
+		lr = tf.train.exponential_decay(
+			learning_rate = learning_rate,
+			global_step = global_step,
+			decay_steps = decay_steps,
+			decay_rate = learning_rate_decay_factor,
+			staircase = True)
+
 		with tf.name_scope('optimizer'):
-			optimizer = tf.train.AdamOptimizer(learning_rate= learning_rate)
+			optimizer = tf.train.AdamOptimizer(learning_rate= lr)
 			global_step = tf.Variable(0, name='global_step', trainable=False)
 			train_op = optimizer.minimize(loss, global_step= global_step)
 		return train_op
@@ -170,14 +183,17 @@ class InceptionResnetV2(Model):
 		return end_points['PreLogitsFlatten']
 
 	def inference_with_bottlenecks(self, x, n_classes):
-		x = self.fc_layer('fc', x, out_nodes=1024, is_pretrain = False)		
-		x = self.dropout("dropout", x)
-		x = self.softmax_linear('output', x, n_classes)		
+		x = self.fc_layer('fc1', x, out_nodes=1536, is_pretrain = False)
+		x = self.dropout("dropout1", x)
+		x = self.fc_layer('fc2', x, out_nodes=512, is_pretrain = False)
+		x = self.dropout("dropout2", x)
+		x = self.fc_layer('fc3', x, out_nodes=128, is_pretrain = False)
+		x = self.softmax_linear('output', x, n_classes)
 		return x
 
 	def load(self, session, is_bottlenecks = False):
 
-		if (is_bottlenecks):
+		if (not is_bottlenecks):
 			return
 
 		checkpoint_file = './inception_resnet_v2_2016_08_30.ckpt'
