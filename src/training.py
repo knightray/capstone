@@ -22,6 +22,7 @@ FLAGS = None
 def trainning_and_verify(train_images, train_labels, verify_images, verify_labels):
 
 	model = get_model(True, define.USE_PRETRAIN)
+
 	train_image_batch, train_label_batch = data_processing.get_batches(train_images, train_labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	verify_image_batch, verify_label_batch = data_processing.get_batches(verify_images, verify_labels, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H)
 	
@@ -30,6 +31,10 @@ def trainning_and_verify(train_images, train_labels, verify_images, verify_label
 	y = tf.placeholder(tf.int32, shape = [define.BATCH_SIZE], name = "y")
 
 	train_logits = model.inference(x, define.N_CLASSES)
+	sess = tf.Session()
+	if (define.USE_PRETRAIN):
+		model.load(sess)
+
 	train_loss = model.losses(train_logits, y)
 	train_op = model.trainning(train_loss, define.LEARNING_RATE)
 	train_acc_op = model.evaluation(train_logits, y)
@@ -47,16 +52,12 @@ def trainning_and_verify(train_images, train_labels, verify_images, verify_label
 		os.mkdir(logs_dir)
 
 	summary_op = tf.summary.merge_all()
-	sess = tf.Session()
 	train_writer = tf.summary.FileWriter(logs_dir, sess.graph)
 	saver = tf.train.Saver(max_to_keep=define.N_EPOCH)
 
 	sess.run(tf.global_variables_initializer())
 	coord = tf.train.Coordinator()
 	threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-	if (define.USE_PRETRAIN):
-		model.load(sess)
 
 	try:
 		for epoch in range(define.N_EPOCH):

@@ -159,22 +159,30 @@ class InceptionResnetV2(Model):
 
 	def inference(self, x, n_classes):
 		with slim.arg_scope(inception_resnet_v2_arg_scope()):
-			x, end_points = inception_resnet_v2(x, num_classes = n_classes, is_training = True)	
+			x, end_points = inception_resnet_v2(x, num_classes = n_classes, is_training = False)	
 
 		return x
 
 	def load(self, session):
-		path = define.PRETRAIN_DATA_PATH
-		path = os.path.join(path, "inception_resnet_v2_2016_08_30.ckpt")
-		data_path = path
-		define.log("We will load pre-trained model from %s... " % path)	
+		checkpoint_file = './inception_resnet_v2_2016_08_30.ckpt'
+		define.log("We will load pre-trained model from %s... " % checkpoint_file)	
 		
+		#saver = tf.train.Saver()
+		#saver.restore(session, checkpoint_file)
+
 		#Define the scopes that you want to exclude for restoration
-		exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
+		exclude = ['InceptionResnetV2/Logits', 
+			'InceptionResnetV2/AuxLogits' 
+		#	'InceptionResnetV2/Repeat_1/block17_5/Branch_1/Conv2d_0b_1x7/weights/Adam_1',
+		#	'InceptionResnetV2/Repeat_1/block17_3/Branch_0/Conv2d_1x1/weights/Adam_1',
+		#	'InceptionResnetV2/Block8/Branch_0/Conv2d_1x1/BatchNorm/beta/Adam',
+		#	'InceptionResnetV2/Mixed_6a/Branch_1/Conv2d_0a_1x1/BatchNorm/beta/Adam_1',
+		#	'InceptionResnetV2/Block8/Branch_0/Conv2d_1x1/weights/Adam'
+		]
 		variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
 
 		saver = tf.train.Saver(variables_to_restore)
-		saver.restore(sess, checkpoint_file)		
+		saver.restore(session, checkpoint_file)		
 		define.log("model is loaded.")
 
 
@@ -312,7 +320,16 @@ def show_value():
 
 
 def main():
-	model = get_model(True)
+
+	checkpoint_path = './inception_resnet_v2_2016_08_30.ckpt'
+	reader = tf.train.NewCheckpointReader(checkpoint_path)
+	var_to_shape_map = reader.get_variable_to_shape_map()
+	# Print tensor name and values
+	for key in var_to_shape_map:
+		print("tensor_name: ", key)
+		print(reader.get_tensor(key))
+
+	#model = get_model(True)
 	
 	
 

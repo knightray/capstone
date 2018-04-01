@@ -8,8 +8,10 @@
 #
 # Image definition
 #
-IMAGE_W = 224
-IMAGE_H = 224
+#IMAGE_W = 224
+#IMAGE_H = 224
+IMAGE_W = 299
+IMAGE_H = 299
 
 #
 # Directory definition
