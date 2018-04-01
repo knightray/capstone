@@ -32,8 +32,8 @@ N_EPOCH = 6
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 # mode can be set as 'simple_cnn' or 'vgg16'
-USE_MODEL = 'vgg16'
-USE_PRETRAIN = True
+USE_MODEL = 'inception_resnet_v2'
+USE_PRETRAIN = False
 PRETRAIN_DATA_PATH = "./"
 KEEP_PROB = 0.5
 BOTTLENECKS_SHAPE = [BATCH_SIZE, 14, 14, 512]

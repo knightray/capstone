@@ -9,7 +9,9 @@ import tensorflow as tf
 import define
 import numpy as np
 import os
+from inception_resnet_v2 import inception_resnet_v2, inception_resnet_v2_arg_scope
 
+slim = tf.contrib.slim
 
 class Model(object):
 	def __init__(self, is_trainning):
@@ -150,6 +152,21 @@ class SimpleCNN(Model):
 		x = self.softmax_linear('output', x, n_classes)
 		return x
 
+class InceptionResnetV2(Model):
+	def __init__(self, is_trainning, is_pretrain = False):
+		Model.__init__(self, is_trainning)
+		self.is_pretrain = is_pretrain
+
+	def inference(self, x, n_classes):
+		with slim.arg_scope(inception_resnet_v2_arg_scope()):
+			x, end_points = inception_resnet_v2(x, num_classes = n_classes, is_training = True)	
+
+		#Define the scopes that you want to exclude for restoration
+		exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits']
+		variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
+
+		return x
+
 class VGG16(Model):
 	def __init__(self, is_trainning, is_pretrain = False):
 		Model.__init__(self, is_trainning)
@@ -262,6 +279,8 @@ def get_model(is_trainning, is_pretrain = False):
 		model = SimpleCNN(is_trainning = is_trainning)
 	elif (define.USE_MODEL == 'vgg16'):
 		model = VGG16(is_trainning = is_trainning, is_pretrain = is_pretrain)
+	elif (define.USE_MODEL == 'inception_resnet_v2'):
+		model = InceptionResnetV2(is_trainning = is_trainning, is_pretrain = is_pretrain)
 	else:
 		define.log("Unrecorgnized model = %s" % define.USE_MODEL)
 	return model
@@ -282,7 +301,8 @@ def show_value():
 
 
 def main():
-	show_value()
+	model = get_model(True)
+	
 	
 
 
