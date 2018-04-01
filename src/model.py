@@ -170,7 +170,8 @@ class InceptionResnetV2(Model):
 		return end_points['PreLogitsFlatten']
 
 	def inference_with_bottlenecks(self, x, n_classes):
-		x = self.fc_layer('fc', x, out_nodes=1536, is_pretrain = False)		
+		x = self.fc_layer('fc', x, out_nodes=1024, is_pretrain = False)		
+		x = self.dropout("dropout", x)
 		x = self.softmax_linear('output', x, n_classes)		
 		return x
 
