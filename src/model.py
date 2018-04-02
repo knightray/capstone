@@ -180,9 +180,11 @@ class InceptionResnetV2(Model):
 		with slim.arg_scope(inception_resnet_v2_arg_scope()):
 			x, end_points = inception_resnet_v2(x, num_classes = define.N_CLASSES, is_training = False)	
 
-		return end_points['PreLogitsFlatten']
+		return end_points['PrePool']
+		#return end_points['PreLogitsFlatten']
 
 	def inference_with_bottlenecks(self, x, n_classes):
+		x = self.pool('pooling1', x, kernel = [1, 3, 3, 1], stride = [1, 2, 2, 1], False)
 		x = self.fc_layer('fc1', x, out_nodes=1536, is_pretrain = False)
 		x = self.dropout("dropout1", x)
 		x = self.fc_layer('fc2', x, out_nodes=512, is_pretrain = False)
