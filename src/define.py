@@ -30,7 +30,7 @@ DOG = 1
 # Trainning definition
 #
 TRAINING_IMAGE_PERCENT = 0.8
-N_EPOCH = 6
+N_EPOCH = 10
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
 # mode can be set as 'simple_cnn' or 'vgg16'
@@ -39,7 +39,7 @@ USE_PRETRAIN = True
 PRETRAIN_DATA_PATH = "./"
 KEEP_PROB = 0.5
 #BOTTLENECKS_SHAPE = [BATCH_SIZE, 14, 14, 512]
-BOTTLENECKS_SHAPE = [BATCH_SIZE, 8, 8, 1536]
+BOTTLENECKS_SHAPE = [BATCH_SIZE, 1536]
 
 TYPE_NORMAL = 'normal'
 TYPE_GB = 'generate_bottlenecks'
