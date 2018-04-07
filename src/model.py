@@ -214,11 +214,11 @@ class VGG16(Model):
 	def __init__(self, is_trainning, is_pretrain = False):
 		Model.__init__(self, is_trainning)
 		self.is_pretrain = is_pretrain
-		self.bottlenecks = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1', 'conv3_2', 'conv3_3', 'conv3_4', 'conv4_1', 'conv4_2', 'conv4_3', 'conv4_4']
+		self.bottlenecks = ['conv1_1', 'conv1_2', 'conv2_1', 'conv2_2', 'conv3_1', 'conv3_2', 'conv3_3', 'conv4_1', 'conv4_2', 'conv4_3', 'conv5_1', 'conv5_2', 'conv5_3']
 
 	def load(self, session, is_bottlenecks):
 		path = define.PRETRAIN_DATA_PATH
-		path = os.path.join(path, "vgg19.npy")
+		path = os.path.join(path, "vgg16.npy")
 		data_path = path
 		define.log("We will load pre-trained model from %s... " % path)	
 
@@ -249,27 +249,27 @@ class VGG16(Model):
 		x = self.conv('conv3_1', x, 256, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv3_2', x, 256, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv3_3', x, 256, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.conv('conv3_4', x, 256, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		#x = self.conv('conv3_4', x, 256, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
 		x = self.conv('conv4_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv4_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv4_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.conv('conv4_4', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		#x = self.conv('conv4_4', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.pool('pool4', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
-		#x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		#x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		#x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		#x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
+		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 		return x
 
 	def inference_with_bottlenecks(self, x, n_classes):
-		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
-		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
-		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
-		x = self.conv('conv5_4', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
-		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+		#x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		#x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		#x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		#x = self.conv('conv5_4', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
+		#x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
 		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = False)
 		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = False)
@@ -330,7 +330,7 @@ def get_model(is_trainning, is_pretrain = False):
 
 
 def show_value():
-    data_path = './vgg19.npy'
+    data_path = './vgg16.npy'
 
     data_dict = np.load(data_path, encoding='latin1').item()
     keys = sorted(data_dict.keys())

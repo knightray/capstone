@@ -70,6 +70,7 @@ def trainning_and_verify(train_images, train_labels, verify_images, verify_label
 				if step % 100 == 0:
 					define.log(' Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
 					summary_str = sess.run(summary_op, feed_dict = {x:tra_images, y:tra_labels})
+					print(summary_str)
 					train_writer.add_summary(summary_str, step)
 
 			define.log(' END Step %d, train loss = %.2f, train accuracy = %.2f%%' %(step, tra_loss, tra_acc*100.0))
@@ -169,9 +170,12 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 	if not os.path.exists(logs_dir):
 		os.mkdir(logs_dir)
 
+	tf.summary.scalar('train_loss', train_loss)  
+	tf.summary.scalar('train_accuracy', train_acc_op)  
 	summary_op = tf.summary.merge_all()
 	sess = tf.Session()
-	train_writer = tf.summary.FileWriter(logs_dir, sess.graph)
+	train_writer = tf.summary.FileWriter(logs_dir + "/train", sess.graph)
+	verify_writer = tf.summary.FileWriter(logs_dir + "/verify", sess.graph)
 	saver = tf.train.Saver(max_to_keep=define.N_EPOCH)
 
 	sess.run(tf.global_variables_initializer())
@@ -196,9 +200,9 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 				tra_losses.append(tra_loss)
 				tra_accs.append(tra_acc)
 				if step % 100 == 0:
-					define.log(' Step %d, train loss = %.3f, train accuracy = %.3f%%' %(step, sum(tra_losses)/len(tra_losses), sum(tra_accs)/len(tra_accs)*100.0))
 					summary_str = sess.run(summary_op, feed_dict = {x:tra_bottlenecks_batch, y:tra_labels_batch})
-					train_writer.add_summary(summary_str, step)
+					train_writer.add_summary(summary_str, step + epoch * max_step)
+					define.log(' Step %d, train loss = %.3f, train accuracy = %.3f%%' %(step, sum(tra_losses)/len(tra_losses), sum(tra_accs)/len(tra_accs)*100.0))
 					tra_losses = []
 					tra_accs = []
 
@@ -216,6 +220,8 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 				_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})
 				verify_losses.append(verify_loss)
 				verify_accs.append(verify_acc)
+				summary_str = sess.run(summary_op, feed_dict = {x:verify_bottlenecks_batch, y:verify_labels_batch})
+				verify_writer.add_summary(summary_str, epoch * 100 + vi)
 			define.log(' verify loss = %.3f, verify accuracy = %.3f%%' %(sum(verify_losses)/len(verify_losses), sum(verify_accs)/len(verify_accs)*100.0))
 
 			define.log("**** EPOCH %d FINISHED ****" % (epoch + 1)) 
