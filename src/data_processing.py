@@ -138,20 +138,20 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
 	#print("images.shape=%s" % tf.shape(images)[0])
 
+	# Resize the image twice in order to avoid the image distortion
 	max_size = tf.maximum(tf.shape(images)[0], tf.shape(images)[1])
 	images = tf.image.resize_image_with_crop_or_pad(images, max_size, max_size)
 	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 	#images = tf.image.resize_images(images, [image_width, image_height])
-	images = tf.image.random_brightness(images, max_delta=0.5)
-	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
-	images = tf.image.random_flip_left_right(images)
+	#images = tf.image.random_brightness(images, max_delta=0.5)
+	#images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
+	#images = tf.image.random_flip_left_right(images)
 	images = tf.image.per_image_standardization(images)
 
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
 	image_batch = tf.cast(image_batch, tf.float32)
-	#print("get_batches():images.shape=%s, label.shape=%s" % (tf.shape(image_batch), tf.shape(label_batch)))
 
 	return image_batch, label_batch
 	
