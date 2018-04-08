@@ -8,8 +8,10 @@
 #
 # Image definition
 #
+# input image size for vgg16
 #IMAGE_W = 224
 #IMAGE_H = 224
+# input image size for inception_resnet_v2
 IMAGE_W = 299
 IMAGE_H = 299
 
@@ -33,12 +35,14 @@ TRAINING_IMAGE_PERCENT = 0.8
 N_EPOCH = 10
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001
-# mode can be set as 'simple_cnn' or 'vgg16'
+# mode can be set as 'simple_cnn' or 'vgg16' or 'inception_resnet_v2'
 USE_MODEL = 'inception_resnet_v2'
 USE_PRETRAIN = True
 PRETRAIN_DATA_PATH = "./"
 KEEP_PROB = 0.5
+# bottlenecks for VGG16
 #BOTTLENECKS_SHAPE = [BATCH_SIZE, 14, 14, 512]
+# bottlenecks for inception_resnet_v2
 BOTTLENECKS_SHAPE = [BATCH_SIZE, 1536]
 
 TYPE_NORMAL = 'normal'

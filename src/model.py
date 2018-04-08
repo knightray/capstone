@@ -355,9 +355,6 @@ def main():
 
 	#model = get_model(True)
 	
-	
-
-
 if __name__ == '__main__':
 	main()
 

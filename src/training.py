@@ -295,7 +295,6 @@ def main(_):
 		test_data_list = log_dir + '/test_list.csv'
 		data_processing.save_list(test_images_list, test_labels_list, test_data_list)
 
-		#training(train_images_list, train_labels_list)
 		trainning_and_verify(train_images_list, train_labels_list, test_images_list, test_labels_list)
 	elif ttype == define.TYPE_GB:
 		train_images_list, train_labels_list, verify_images_list, verify_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
@@ -310,19 +309,9 @@ def main(_):
 		test_labels_list = [0 for i in range(len(test_images_list))]
 		generate_bottlenecks(test_images_list, test_labels_list, "test")
 
-		#train_data_list = log_dir + '/train_list.csv'
-		#data_processing.save_list(train_images_list, train_labels_list, train_data_list)
-		#test_data_list = log_dir + '/test_list.csv'
-		#data_processing.save_list(verify_images_list, verify_labels_list, verify_data_list)
 	elif ttype == define.TYPE_TB:
 		bottlenecks_verify = read_bottlenecks('bottlenecks_verify.hdf5')
 		bottlenecks_train = read_bottlenecks('bottlenecks_train.hdf5')
-
-		#train_data_list = log_dir + '/train_list.csv'
-		#train_images_list, train_labels_list = data_processing.load_list(train_data_list)
-		#test_data_list = log_dir + '/test_list.csv'
-		#test_images_list, test_labels_list = data_processing.load_list(test_data_list)
-
 		train_by_bottlenecks(bottlenecks_train, bottlenecks_verify)
 
 if __name__ == '__main__':

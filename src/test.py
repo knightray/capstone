@@ -81,15 +81,18 @@ def test_for_given_image(log_dir, image_file):
 				if (vars(FLAGS)['silence'] != True):
 					define.log('This is a dog with possibility %.6f' %prediction[:, 1])	
 
-def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
+def do_test_by_bottlenecks(test_bottlenecks, epoch = -1, num_batch = -1):
 	log_dir = vars(FLAGS)['log_dir']
+	is_silence = vars(FLAGS)['silence']
 
 	if (epoch != -1):
 		define.log("We will test our model after %d epoch." % epoch)
 	with tf.Graph().as_default():
 		num_step = int(len(test_bottlenecks) / 2)
+		if num_batch != -1:
+			num_step = num_batch        
 		model = get_model(False)
-	
+
 		x = tf.placeholder(tf.float32, shape = define.BOTTLENECKS_SHAPE, name = "x")
 		y = tf.placeholder(tf.int32, shape = [define.BATCH_SIZE], name = "y")
 
@@ -108,7 +111,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 				if ckpt and ckpt.model_checkpoint_path:
 					global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
 					saver.restore(sess, ckpt.model_checkpoint_path)
-					if (vars(FLAGS)['silence'] != True):
+					if (is_silence != True):
 						define.log('Loading success, global_step is %s' % global_step)
 				else:
 					define.log('No checkpoint file found')
@@ -120,7 +123,7 @@ def do_test_by_bottlenecks(test_bottlenecks, epoch = -1):
 					model_path = ckpt.all_model_checkpoint_paths[epoch]
 					global_step = model_path.split('/')[-1].split('-')[-1]
 					saver.restore(sess, model_path)
-					if (vars(FLAGS)['silence'] != True):
+					if (is_silence != True):
 						define.log('Loading success, global_step is %s' % global_step)
 				else:
 					define.log('No checkpoint file found')
