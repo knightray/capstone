@@ -32,9 +32,10 @@
     2018-04-08 17:38:18: ***step = 100 : shape=(8, 1536)***
     ```
     4. 运行完成之后会在当前目录下生成如下三个文件。
-        + bottlenecks_test.hdf5
-        + bottlenecks_train.hdf5
-        + bottlenecks_verify.hdf5
+    ```
+    (tf) [xxx@xxx src]$ ls *.hdf5
+    bottlenecks_test.hdf5  bottlenecks_train.hdf5  bottlenecks_verify.hdf5
+    ```
 
 2. 利用生成的特征量来训练模型。
 
@@ -42,9 +43,35 @@
     2. 运行`python training.py --type=train_by_bottlenecks`命令来训练模型。
     3. 正确运行时会产生如下的输出：
     ```
+    (tf) [xxx@xxx src]$ python training.py --type=train_by_bottlenecks
+    2018-04-08 18:00:13:   [*] printing trainable variables
+    2018-04-08 18:00:13:   var   0: (1536, 1536)      fc1/weights:0
+    2018-04-08 18:00:13:   var   1: (1536,)           fc1/biases:0
+    2018-04-08 18:00:13:   var   2: (1536, 512)       fc2/weights:0
+    2018-04-08 18:00:13:   var   3: (512,)            fc2/biases:0
+    2018-04-08 18:00:13:   var   4: (512, 128)        fc3/weights:0
+    2018-04-08 18:00:13:   var   5: (128,)            fc3/biases:0
+    2018-04-08 18:00:13:   var   6: (128, 2)          output/softmax_linear:0
+    2018-04-08 18:00:13:   var   7: (2,)              output/biases:0
+    2018-04-08 18:00:13: Do trainning for 2500 step in one epoch.
+    2018-04-08 18:00:14:  Step 0, train loss = 0.808, train accuracy = 25.000%
+    2018-04-08 18:00:15:  Step 100, train loss = 0.179, train accuracy = 93.875%
+    2018-04-08 18:00:15:  Step 200, train loss = 0.084, train accuracy = 97.750%
+    2018-04-08 18:00:15:  Step 300, train loss = 0.054, train accuracy = 98.625%
+    2018-04-08 18:00:15:  Step 400, train loss = 0.083, train accuracy = 97.625%
+    2018-04-08 18:00:15:  Step 500, train loss = 0.105, train accuracy = 97.375%
+    2018-04-08 18:00:16:  Step 600, train loss = 0.076, train accuracy = 97.625%
+    2018-04-08 18:00:16:  Step 700, train loss = 0.078, train accuracy = 97.500%        
     ```
     4. 运行完成之后会在logs目录下生成对应的检查点文件。
     ```
+    (tf) [xxx@xxx src]$ ls -l ../logs/model_inception_resnet_v2.ckpt-*
+    -rw-rw-r-- 1 xxx xxx 38564396 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-10000.data-00000-of-00001
+    -rw-rw-r-- 1 xxx xxx     1022 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-10000.index
+    -rw-rw-r-- 1 xxx xxx    85454 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-10000.meta
+    -rw-rw-r-- 1 xxx xxx 38564396 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-12500.data-00000-of-00001
+    -rw-rw-r-- 1 xxx xxx     1022 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-12500.index
+    -rw-rw-r-- 1 xxx xxx    85454 4月   8 18:00 ../logs/model_inception_resnet_v2.ckpt-12500.meta    ```
     ```
 
 3. 利用训练好的模型对测试集进行判定。
@@ -53,9 +80,16 @@
     2. 运行`python test.py --type=testb`命令来对测试集进行判定。
     3. 正确运行时会产生如下的输出：
     ```
+    (tf) [zhangck@hp src_commit]$ python test.py --type=testb
+    2018-04-08 18:04:29: We will evaluate our model by test data set...
+    2018-04-08 18:04:30: Reading checkpoints...
+    2018-04-08 18:04:30: Loading success, global_step is 25000
+    2018-04-08 18:04:30: Evaluating the model with 12504 images......    
     ```
     4. 运行完成之后会在当前目录下生成对应的预测结果。
     ```
+    (tf) [xxx@xxx src]$ ls -l dogs_vs_cats_submission_0408180432.csv
+    -rw-rw-r-- 1 xxx xxx 138903 4月   8 18:04 dogs_vs_cats_submission_0408180432.csv    
     ```
 
 ## 项目所使用的软件和库
@@ -72,7 +106,7 @@ https://www.kaggle.com/c/dogs-vs-cats-redux-kernels-edition/data
 下载之后的数据文件，请存放在data目录下，默认的放置路径如下所示，当然你也可以通过define.py的设定进行变更。
 
 + 测试集合：data/kaggle/test
-+ 训练集合：data/kaggle/train
++ 训练集合：data/kaggle/train
 
 ## 项目使用的预训练模型文件
 项目中还会用到预训练模型文件，这些文件中保存了模型在一些更大数据集上训练的结果。
