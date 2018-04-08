@@ -261,7 +261,7 @@ class VGG16(Model):
 		x = self.conv('conv5_1', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv5_2', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
 		x = self.conv('conv5_3', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = self.is_pretrain)
-		x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
+		x = self.pool('pool5', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 		return x
 
 	def inference_with_bottlenecks(self, x, n_classes):
@@ -271,8 +271,8 @@ class VGG16(Model):
 		#x = self.conv('conv5_4', x, 512, kernel_size=[3,3], stride=[1,1,1,1], is_pretrain = False)
 		#x = self.pool('pool3', x, kernel=[1,2,2,1], stride=[1,2,2,1], is_max_pool=True)
 
-		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = False)
-		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = False)
+		x = self.fc_layer('fc6', x, out_nodes=4096, is_pretrain = True)
+		x = self.fc_layer('fc7', x, out_nodes=4096, is_pretrain = True)
 		x = self.fc_layer('fc8', x, out_nodes=1000, is_pretrain = False)		
 		x = self.dropout("dropout1", x)
 		x = self.fc_layer('fc9', x, out_nodes=512, is_pretrain = False)		
