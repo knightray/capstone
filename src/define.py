@@ -18,15 +18,23 @@ IMAGE_H = 299
 #
 # Directory definition
 #
-DATA_DIR = '../data/kaggle/'
+#DATA_DIR = '../data/kaggle/'
+DATA_DIR = '../data/museum/'
 LOG_DIR = '../logs/'
 
 #
 # Classify definition
 #
-N_CLASSES = 2
-CAT = 0
-DOG = 1
+#N_CLASSES = 2
+#CAT = 0
+#DOG = 1
+N_CLASSES = 6
+CLASS1 = 1
+CLASS2 = 2
+CLASS3 = 3
+CLASS4 = 4
+CLASS5 = 5
+CLASS6 = 6
 
 #
 # Trainning definition
