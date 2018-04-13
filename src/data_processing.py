@@ -49,6 +49,38 @@ def get_test_data_from_kaggle_dataset(data_dir):
 	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[0]))
 	return images_list
 
+def get_test_data_from_museum_dataset(data_dir):
+	images_list = []
+	return images_list
+
+
+def get_train_data_from_museum_dataset(data_dir):
+	sub_dirs = ['type1', 'type2', 'type3', 'type4', 'type5', 'type6']
+
+	images_list = []
+	labels_list = []
+	all_files = []
+
+	for sub_dir in sub_dirs:
+		images_dir = data_dir + sub_dir
+		files = os.listdir(images_dir)
+		for f in files:
+			if f.find(".JPG") > 0:
+				images_list.append(images_dir + "/" + f)
+				labels_list.append(int(sub_dir.replace('type','')))
+
+	tmp = np.array([images_list, labels_list])
+	tmp = tmp.transpose()
+	np.random.shuffle(tmp)
+
+	images_list = list(tmp[:, 0])
+	labels_list = list(tmp[:, 1])
+	labels_list = [int(l) for l in labels_list]
+
+	total_cnt = len(images_list)
+	train_cnt = int(total_cnt * define.TRAINING_IMAGE_PERCENT)
+	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt:], labels_list[train_cnt:]
+
 def get_train_data_from_kaggle_dataset(data_dir):
 	images_dir = data_dir + 'train/'
 
@@ -144,9 +176,9 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 	#images = tf.image.resize_images(images, [image_width, image_height])
-	#images = tf.image.random_brightness(images, max_delta=0.5)
-	#images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
-	#images = tf.image.random_flip_left_right(images)
+	images = tf.image.random_brightness(images, max_delta=0.5)
+	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
+	images = tf.image.random_flip_left_right(images)
 	images = tf.image.per_image_standardization(images)
 
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
@@ -193,12 +225,14 @@ def main(_):
 	#test_images_list = test_images_list[:16]
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_museum_dataset(data_dir)	
+	print(train_images_list)
+	print(train_labels_list)
 	#train_images_list = train_images_list[:10]
 	#train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
-	get_image_info(data_dir)
+	#get_image_info(data_dir)
 
 	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
 	#image_batch, label_batch = get_batches(test_images_list, test_labels_list, batch_size, image_w, image_h)
