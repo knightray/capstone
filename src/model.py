@@ -176,6 +176,12 @@ class InceptionResnetV2(Model):
 
 		return x
 
+	def generate_predictions(self, x):
+		with slim.arg_scope(inception_resnet_v2_arg_scope()):
+			x, end_points = inception_resnet_v2(x, is_training = False)	
+
+		return end_points['Predictions']
+
 	def generate_bottlenecks(self, x):
 		with slim.arg_scope(inception_resnet_v2_arg_scope()):
 			x, end_points = inception_resnet_v2(x, num_classes = define.N_CLASSES, is_training = False)	

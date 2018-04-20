@@ -15,6 +15,9 @@ import numpy as np
 import tensorflow as tf
 import define
 import csv
+import math
+import h5py
+from model import get_model 
 from PIL import Image
 
 FLAGS = None
@@ -48,6 +51,38 @@ def get_test_data_from_kaggle_dataset(data_dir):
 
 	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[0]))
 	return images_list
+
+def get_test_data_from_museum_dataset(data_dir):
+	images_list = []
+	return images_list
+
+
+def get_train_data_from_museum_dataset(data_dir):
+	sub_dirs = ['type1', 'type2', 'type3', 'type4', 'type5', 'type6']
+
+	images_list = []
+	labels_list = []
+	all_files = []
+
+	for sub_dir in sub_dirs:
+		images_dir = data_dir + sub_dir
+		files = os.listdir(images_dir)
+		for f in files:
+			if f.find(".JPG") > 0:
+				images_list.append(images_dir + "/" + f)
+				labels_list.append(int(sub_dir.replace('type','')))
+
+	tmp = np.array([images_list, labels_list])
+	tmp = tmp.transpose()
+	np.random.shuffle(tmp)
+
+	images_list = list(tmp[:, 0])
+	labels_list = list(tmp[:, 1])
+	labels_list = [int(l) for l in labels_list]
+
+	total_cnt = len(images_list)
+	train_cnt = int(total_cnt * define.TRAINING_IMAGE_PERCENT)
+	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt:], labels_list[train_cnt:]
 
 def get_train_data_from_kaggle_dataset(data_dir):
 	images_dir = data_dir + 'train/'
@@ -144,9 +179,9 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
 	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
 	#images = tf.image.resize_images(images, [image_width, image_height])
-	#images = tf.image.random_brightness(images, max_delta=0.5)
-	#images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
-	#images = tf.image.random_flip_left_right(images)
+	images = tf.image.random_brightness(images, max_delta=0.5)
+	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
+	images = tf.image.random_flip_left_right(images)
 	images = tf.image.per_image_standardization(images)
 
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
@@ -177,12 +212,89 @@ def get_image_info(data_dir):
 
 	print("max_w = %d, max_h = %d" % (max(all_w), max(all_h)))
 	
+def get_class_refs():
+	f = open("refs.txt")
+	lines = f.readlines()
+	classes = []
+	for l in lines:
+		classes.append(l.split()[1])
+	return classes
 
-def main(_):
+def is_dog_or_cat(top_n_p, classes):
+	p_class = [classes[p] for p in top_n_p]
+	if '猫' in p_class or '狗' in p_class:
+		return True
+	else:
+		#print(p_class)
+		return False
 
+
+def get_outliers(data_dir):
+
+	N_TOP = 50
+	classes = get_class_refs()
+
+	images_dir = data_dir + 'train/'
+	images_list = os.listdir(images_dir)
+	images_list = [images_dir + image for image in images_list]
+	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[1]))
+	labels_list = [0 for i in range(len(images_list))]
+
+	with tf.Graph().as_default():
+		model = get_model(True, define.USE_PRETRAIN)
+		image_batch, label_batch = get_batches(images_list, labels_list, define.BATCH_SIZE, define.IMAGE_W, define.IMAGE_H, is_shuffle = False)
+		predictions = model.generate_predictions(image_batch)
+		top_n = tf.nn.top_k(predictions, N_TOP)
+
+		max_step = int(math.ceil(len(images_list) / define.BATCH_SIZE))
+		sess = tf.Session()
+
+		sess.run(tf.global_variables_initializer())
+		coord = tf.train.Coordinator()
+		threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+		if (define.USE_PRETRAIN):
+			model.load(sess, True)
+
+		images_predictions = []
+		f = h5py.File("predictions.hdf5", "w")
+		try:
+			for step in range(max_step):
+				if coord.should_stop():
+					break
+
+				predictions_vals, top_n_vals = sess.run([predictions, top_n])
+				bdata = f.create_dataset('predictions_batch%d' % step, data = predictions_vals)
+				#if step % 100 == 0:
+				#	define.log("***step = %d : shape=%s***" % (step, predictions_vals.shape))
+				images_predictions.append(predictions_vals)
+				for p, image in zip(top_n_vals.indices, images_list[step * define.BATCH_SIZE : (step + 1) * define.BATCH_SIZE]):
+					if not is_dog_or_cat(p, classes):
+						print("[NG] - %s" % image)
+					else:
+						pass
+						#print("[OK] - %s" % image)
+				#print(top_n_vals.indices)
+				#print(images_list[step * define.BATCH_SIZE : (step + 1) * define.BATCH_SIZE])
+				#print([np.argmax(p) for p in predictions_vals])
+				#print([classes[np.argmax(p)] for p in predictions_vals])
+
+		except tf.errors.OutOfRangeError:
+			define.log('Done predictions -- epoch limit reached')
+		finally:
+			coord.request_stop()
+
+		for image, prediction in zip(images_list, images_predictions):
+			print("%s -> %s" % (image, prediction))
+
+		coord.join(threads)
+		sess.close()
+
+	define.log("Done predictions")
+
+def test_get_batches(data_dir):
 	import matplotlib.pyplot as plt
 
-	data_dir = vars(FLAGS)['data_dir']
 	output_dir = data_dir + "output/"
 	batch_size = 8
 	batch_num = 2
@@ -193,12 +305,14 @@ def main(_):
 	#test_images_list = test_images_list[:16]
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_museum_dataset(data_dir)	
+	print(train_images_list)
+	print(train_labels_list)
 	#train_images_list = train_images_list[:10]
 	#train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
-	get_image_info(data_dir)
+	#get_image_info(data_dir)
 
 	image_batch, label_batch = get_batches(train_images_list, train_labels_list, batch_size, image_w, image_h)
 	#image_batch, label_batch = get_batches(test_images_list, test_labels_list, batch_size, image_w, image_h)
@@ -228,6 +342,12 @@ def main(_):
 		   coord.request_stop()
 
 		coord.join(threads)
+
+
+def main(_):
+	data_dir = vars(FLAGS)['data_dir']
+	get_outliers(data_dir)
+	#test_get_batches(data_dir)
 
 
 if __name__ == '__main__':
