@@ -19,6 +19,7 @@ import math
 import h5py
 from model import get_model 
 from PIL import Image
+import inception_preprocessing
 
 FLAGS = None
 
@@ -174,15 +175,19 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	#print("images.shape=%s" % tf.shape(images)[0])
 
 	# Resize the image twice in order to avoid the image distortion
-	max_size = tf.maximum(tf.shape(images)[0], tf.shape(images)[1])
-	images = tf.image.resize_image_with_crop_or_pad(images, max_size, max_size)
-	images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
-	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-	#images = tf.image.resize_images(images, [image_width, image_height])
-	images = tf.image.random_brightness(images, max_delta=0.5)
-	images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
-	images = tf.image.random_flip_left_right(images)
-	images = tf.image.per_image_standardization(images)
+	#max_size = tf.maximum(tf.shape(images)[0], tf.shape(images)[1])
+	#images = tf.image.resize_image_with_crop_or_pad(images, max_size, max_size)
+	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
+	##images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+	##images = tf.image.resize_images(images, [image_width, image_height])
+	#images = tf.image.random_brightness(images, max_delta=0.5)
+	#images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
+	#images = tf.image.random_flip_left_right(images)
+	#images = tf.image.per_image_standardization(images)
+	images= inception_preprocessing.preprocess_image(images, 
+                                                 image_height, 
+                                                 image_width,
+                                                 is_training=False,)
 
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
@@ -221,7 +226,8 @@ def get_class_refs():
 	return classes
 
 def is_dog_or_cat(top_n_p, classes):
-	p_class = [classes[p] for p in top_n_p]
+	#print(top_n_p)
+	p_class = [classes[p - 1] for p in top_n_p]
 	if '猫' in p_class or '狗' in p_class:
 		return True
 	else:
@@ -231,7 +237,7 @@ def is_dog_or_cat(top_n_p, classes):
 
 def get_outliers(data_dir):
 
-	N_TOP = 50
+	N_TOP = 30
 	classes = get_class_refs()
 
 	images_dir = data_dir + 'train/'
