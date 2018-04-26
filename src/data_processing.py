@@ -237,13 +237,16 @@ def is_dog_or_cat(top_n_p, classes):
 
 def get_outliers(data_dir):
 
-	N_TOP = 30
+	N_TOP = 10
+	#N_IMAGE = 1000
+
 	classes = get_class_refs()
 
 	images_dir = data_dir + 'train/'
 	images_list = os.listdir(images_dir)
 	images_list = [images_dir + image for image in images_list]
 	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[1]))
+	#images_list = images_list[:N_IMAGE]
 	labels_list = [0 for i in range(len(images_list))]
 
 	with tf.Graph().as_default():
@@ -260,7 +263,7 @@ def get_outliers(data_dir):
 		threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
 		if (define.USE_PRETRAIN):
-			model.load(sess, True)
+			model.load(sess, True, is_load_logits = True)
 
 		images_predictions = []
 		f = h5py.File("predictions.hdf5", "w")
@@ -278,8 +281,8 @@ def get_outliers(data_dir):
 					if not is_dog_or_cat(p, classes):
 						print("[NG] - %s" % image)
 					else:
-						pass
 						#print("[OK] - %s" % image)
+						pass
 				#print(top_n_vals.indices)
 				#print(images_list[step * define.BATCH_SIZE : (step + 1) * define.BATCH_SIZE])
 				#print([np.argmax(p) for p in predictions_vals])
@@ -290,8 +293,8 @@ def get_outliers(data_dir):
 		finally:
 			coord.request_stop()
 
-		for image, prediction in zip(images_list, images_predictions):
-			print("%s -> %s" % (image, prediction))
+		#for image, prediction in zip(images_list, images_predictions):
+		#	print("%s -> %s" % (image, prediction))
 
 		coord.join(threads)
 		sess.close()
@@ -311,7 +314,7 @@ def test_get_batches(data_dir):
 	#test_images_list = test_images_list[:16]
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_museum_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
 	print(train_images_list)
 	print(train_labels_list)
 	#train_images_list = train_images_list[:10]

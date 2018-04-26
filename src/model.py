@@ -199,7 +199,7 @@ class InceptionResnetV2(Model):
 		x = self.softmax_linear('output', x, n_classes)
 		return x
 
-	def load(self, session, is_bottlenecks = False):
+	def load(self, session, is_bottlenecks = False, is_load_logits = False):
 
 		if (not is_bottlenecks):
 			return
@@ -208,8 +208,11 @@ class InceptionResnetV2(Model):
 		define.log("We will load pre-trained model from %s... " % checkpoint_file)	
 		
 		#Define the scopes that you want to exclude for restoration
-		exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits' ]
-		variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
+		if (not is_load_logits):
+			exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits' ]
+			variables_to_restore = slim.get_variables_to_restore(exclude = exclude)
+		else:
+			variables_to_restore = slim.get_variables_to_restore()
 
 		saver = tf.train.Saver(variables_to_restore)
 		saver.restore(session, checkpoint_file)		
