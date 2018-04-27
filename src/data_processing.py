@@ -57,38 +57,6 @@ def get_test_data_from_kaggle_dataset(data_dir):
 	images_list = sorted(images_list, key = lambda d : int(d.split('/')[-1].split('.')[0]))
 	return images_list
 
-def get_test_data_from_museum_dataset(data_dir):
-	images_list = []
-	return images_list
-
-
-def get_train_data_from_museum_dataset(data_dir):
-	sub_dirs = ['type1', 'type2', 'type3', 'type4', 'type5', 'type6']
-
-	images_list = []
-	labels_list = []
-	all_files = []
-
-	for sub_dir in sub_dirs:
-		images_dir = data_dir + sub_dir
-		files = os.listdir(images_dir)
-		for f in files:
-			if f.find(".JPG") > 0:
-				images_list.append(images_dir + "/" + f)
-				labels_list.append(int(sub_dir.replace('type','')))
-
-	tmp = np.array([images_list, labels_list])
-	tmp = tmp.transpose()
-	np.random.shuffle(tmp)
-
-	images_list = list(tmp[:, 0])
-	labels_list = list(tmp[:, 1])
-	labels_list = [int(l) for l in labels_list]
-
-	total_cnt = len(images_list)
-	train_cnt = int(total_cnt * define.TRAINING_IMAGE_PERCENT)
-	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt:], labels_list[train_cnt:]
-
 def get_train_data_from_kaggle_dataset(data_dir):
 	images_dir = data_dir + 'train/'
 
@@ -169,7 +137,7 @@ def get_files_from_oxford_pet_dataset(data_dir):
 
 def image_preprocessing(images, image_height, image_width):
 	if define.USE_MODEL == 'vgg16':
-		print("vgg_preprocessing... %d,%d" % (image_height, image_width))
+		print("vgg_preprocessing... ")
 		images = vgg_preprocessing.preprocess_image(images, image_height, image_width, is_training = False)
 	elif define.USE_MODEL == 'inception_resnet_v2':
 		print("inception_preprocessing...")
