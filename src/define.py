@@ -56,7 +56,7 @@ if USE_MODEL == 'inception_resnet_v2':
 	BOTTLENECKS_SHAPE = [BATCH_SIZE, 1536]
 elif USE_MODEL == 'vgg16':
 	# bottlenecks for VGG16
-	BOTTLENECKS_SHAPE = [BATCH_SIZE, 14, 14, 512]
+	BOTTLENECKS_SHAPE = [BATCH_SIZE, 7, 7, 512]
 else:
 	BOTTLENECKS_SHAPE = []
 
