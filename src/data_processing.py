@@ -20,6 +20,10 @@ import h5py
 from model import get_model 
 from PIL import Image
 import inception_preprocessing
+import vgg_preprocessing
+import shutil
+
+slim = tf.contrib.slim
 
 FLAGS = None
 
@@ -163,6 +167,18 @@ def get_files_from_oxford_pet_dataset(data_dir):
 
 	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt + 1:], labels_list[train_cnt + 1:]
 
+def image_preprocessing(images, image_height, image_width):
+	if define.USE_MODEL == 'vgg16':
+		print("vgg_preprocessing... %d,%d" % (image_height, image_width))
+		images = vgg_preprocessing.preprocess_image(images, image_height, image_width, is_training = False)
+	elif define.USE_MODEL == 'inception_resnet_v2':
+		print("inception_preprocessing...")
+		images = inception_preprocessing.preprocess_image(images, image_height, image_width, is_training = False)
+	else:
+		print("standardization preprocessing...")
+		images = tf.image.per_image_standardization(images)
+	return images
+
 
 def get_batches(images_list, labels_list, batch_size, image_width, image_height, is_shuffle = True):
 
@@ -172,22 +188,19 @@ def get_batches(images_list, labels_list, batch_size, image_width, image_height,
 	input_queue = tf.train.slice_input_producer([images, labels], shuffle = is_shuffle)
 	labels = input_queue[1]
 	images = tf.image.decode_jpeg(tf.read_file(input_queue[0]), try_recover_truncated = True, acceptable_fraction = 0.5, channels = 3)
-	#print("images.shape=%s" % tf.shape(images)[0])
 
 	# Resize the image twice in order to avoid the image distortion
 	#max_size = tf.maximum(tf.shape(images)[0], tf.shape(images)[1])
 	#images = tf.image.resize_image_with_crop_or_pad(images, max_size, max_size)
 	#images = tf.image.resize_image_with_crop_or_pad(images, image_width, image_height)
-	##images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-	##images = tf.image.resize_images(images, [image_width, image_height])
+	#images = tf.image.resize_images(images, [image_width, image_height], tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+	#images = tf.image.resize_images(images, [image_width, image_height])
+
+	# Image preprocessing
 	#images = tf.image.random_brightness(images, max_delta=0.5)
 	#images = tf.image.random_contrast(images, lower = 0.1, upper = 0.8)
 	#images = tf.image.random_flip_left_right(images)
-	#images = tf.image.per_image_standardization(images)
-	images= inception_preprocessing.preprocess_image(images, 
-                                                 image_height, 
-                                                 image_width,
-                                                 is_training=False,)
+	images= image_preprocessing(images, image_height, image_width)
 
 	image_batch, label_batch = tf.train.batch([images, labels], batch_size = batch_size, num_threads = 1, capacity = len(images_list))
 	label_batch = tf.reshape(label_batch, [batch_size])
@@ -234,6 +247,17 @@ def is_dog_or_cat(top_n_p, classes):
 		#print(p_class)
 		return False
 
+def exclude_outlier(data_dir):
+	outlier_dir = data_dir + "outlier/"
+	f = open("outlier.txt")
+	lines = f.readlines()
+	for line in lines:
+		fpath = line.split(" ")[2].replace("\n", "")
+		fname = fpath.split("/")[4]
+		shutil.move(fpath, outlier_dir + fname) 
+		print("moving %s" % fpath)
+
+	print("Done")
 
 def get_outliers(data_dir):
 
@@ -307,16 +331,14 @@ def test_get_batches(data_dir):
 	output_dir = data_dir + "output/"
 	batch_size = 8
 	batch_num = 2
-	image_w = 500
-	image_h = 500
+	image_w = define.IMAGE_W
+	image_h = define.IMAGE_H
 
 	#test_images_list = get_test_data_from_kaggle_dataset(data_dir)
 	#test_images_list = test_images_list[:16]
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
 	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
-	print(train_images_list)
-	print(train_labels_list)
 	#train_images_list = train_images_list[:10]
 	#train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
@@ -355,14 +377,21 @@ def test_get_batches(data_dir):
 
 def main(_):
 	data_dir = vars(FLAGS)['data_dir']
-	get_outliers(data_dir)
-	#test_get_batches(data_dir)
+	dtype = vars(FLAGS)['type']
 
+	if dtype == define.TYPE_GET_BATCH:
+		test_get_batches(data_dir)
+	elif dtype == define.TYPE_GET_OUTLIER:
+		get_outliers(data_dir)
+	elif dtype == define.TYPE_EXCLUDE_OUTLIER:
+		exclude_outlier(data_dir)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--data_dir', type=str, default=define.DATA_DIR,
                       help='Directory for storing input data')
+	parser.add_argument('--type', type=str, default=define.TYPE_GET_BATCH,
+					  help='data processing type, should be the values as like (get_batch, get_outlier, exclude_outlier)')
 	FLAGS, unparsed = parser.parse_known_args()
 	tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
 
