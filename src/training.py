@@ -214,7 +214,7 @@ def train_by_bottlenecks(train_bottlenecks, verify_bottlenecks):
 			verify_losses = []
 			verify_accs = []
 			for vi in range(100):
-				verify_batch_no = random.randint(0,600)
+				verify_batch_no = random.randint(0,300)
 				verify_bottlenecks_batch = verify_bottlenecks['bottlnecks_batch%d' % verify_batch_no]
 				verify_labels_batch = verify_bottlenecks['labels_batch%d' % verify_batch_no]
 				_, verify_loss, verify_acc = sess.run([train_op, train_loss, train_acc_op], feed_dict={x:verify_bottlenecks_batch, y:verify_labels_batch})

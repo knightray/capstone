@@ -247,11 +247,9 @@ def main(_):
 	elif (test_type == define.TYPE_VERIFY_SET_BY_BOTTLENECKS):
 		if (vars(FLAGS)['silence'] != True):
 			define.log("We will evaluate model by verify data set...")
-		test_data_list = log_dir + '/test_list.csv'
-		test_images_list, test_labels_list = data_processing.load_list(test_data_list)
-		test_bottlenecks = h5py.File("bottlenecks_verify.hdf5", 'r')
+		verify_bottlenecks = h5py.File("bottlenecks_verify.hdf5", 'r')
 
-		predictions, probalities = do_test_by_bottlenecks(test_bottlenecks, epoch = epoch)
+		predictions, probalities = do_test_by_bottlenecks(verify_bottlenecks, epoch = epoch)
 
 	elif (test_type == define.TYPE_TEST_SET_BY_BOTTLENECKS):
 		if (vars(FLAGS)['silence'] != True):
