@@ -46,6 +46,53 @@ def save_list(images, labels, file_name):
 		f.write("%s,%d\n" % (image, label))
 	f.close()
 
+def get_test_data(data_dir):
+	if define.DATA_SET == 'kaggle':
+		return get_test_data_from_kaggle_dataset(data_dir)
+	elif define.DATA_SET == 'museum':
+		return get_test_data_from_museum_dataset(data_dir)
+	else:
+		return get_test_data_from_kaggle_dataset(data_dir)
+
+def get_train_data(data_dir):
+	if define.DATA_SET == 'kaggle':
+		return get_train_data_from_kaggle_dataset(data_dir)
+	elif define.DATA_SET == 'museum':
+		return get_train_data_from_museum_dataset(data_dir)
+	else:
+		return get_train_data_from_kaggle_dataset(data_dir)
+
+def get_train_data_from_museum_dataset(data_dir):
+	sub_dirs = ['type1', 'type2', 'type3', 'type4', 'type5', 'type6']
+
+	images_list = []
+	labels_list = []
+	all_files = []
+
+	for sub_dir in sub_dirs:
+		images_dir = data_dir + sub_dir
+		files = os.listdir(images_dir)
+		for f in files:
+			if f.find(".JPG") > 0:
+				images_list.append(images_dir + "/" + f)
+				labels_list.append(int(sub_dir.replace('type','')))
+
+	tmp = np.array([images_list, labels_list])
+	tmp = tmp.transpose()
+	np.random.shuffle(tmp)
+
+	images_list = list(tmp[:, 0])
+	labels_list = list(tmp[:, 1])
+	labels_list = [int(l) for l in labels_list]
+
+	total_cnt = len(images_list)
+	train_cnt = int(total_cnt * define.TRAINING_IMAGE_PERCENT)
+	return images_list[:train_cnt], labels_list[:train_cnt], images_list[train_cnt:], labels_list[train_cnt:]
+
+def get_test_data_from_museum_dataset(data_dir):
+	images_list = []
+	return images_list
+
 def get_test_data_from_kaggle_dataset(data_dir):
 	images_dir = data_dir + 'test/'
 
@@ -306,7 +353,7 @@ def test_get_batches(data_dir):
 	#test_images_list = test_images_list[:16]
 	#test_labels_list = [0 for i in range(16)]
 	#print(test_images_list)
-	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data_from_kaggle_dataset(data_dir)	
+	train_images_list, train_labels_list, test_images_list, test_labels_list = get_train_data(data_dir)	
 	#train_images_list = train_images_list[:10]
 	#train_labels_list = train_labels_list[:10]
 	print("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
