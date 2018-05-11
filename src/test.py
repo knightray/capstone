@@ -255,7 +255,7 @@ def main(_):
 		if (vars(FLAGS)['silence'] != True):
 			define.log("We will evaluate our model by test data set...")
 	
-		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
+		test_images_list = data_processing.get_test_data(define.DATA_DIR)
 		test_bottlenecks = h5py.File("bottlenecks_test.hdf5", 'r')
 		predictions, probalities = do_test_by_bottlenecks(test_bottlenecks, epoch = epoch)
 		time_stamp = time.strftime("%m%d%H%M%S", time.localtime())
@@ -269,7 +269,7 @@ def main(_):
 	elif (test_type == define.TYPE_TEST_SET):
 		if (vars(FLAGS)['silence'] != True):
 			define.log("We will evaluate our model by test data set...")
-		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
+		test_images_list = data_processing.get_test_data(define.DATA_DIR)
 	
 		#test_images_list = test_images_list[:8]
 		predictions, probalities = do_test(test_images_list, None, epoch = epoch)

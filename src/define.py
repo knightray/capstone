@@ -6,7 +6,8 @@
 # =======================================================
 
 # mode can be set as 'simple_cnn' or 'vgg16' or 'inception_resnet_v2'
-USE_MODEL = 'vgg16'
+USE_MODEL = 'inception_resnet_v2'
+DATA_SET = 'museum'
 
 #
 # Image definition
@@ -31,7 +32,11 @@ TYPE_EXCLUDE_OUTLIER = 'exclude_outlier'
 #
 # Directory definition
 #
-DATA_DIR = '../data/kaggle/'
+if DATA_SET == 'kaggle':
+	DATA_DIR = '../data/kaggle/'
+elif DATA_SET == 'museum':
+	DATA_DIR = '../data/museum/'
+
 LOG_DIR = '../logs/'
 
 #

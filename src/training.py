@@ -287,7 +287,7 @@ def main(_):
 	ttype = vars(FLAGS)['type']
 
 	if ttype == define.TYPE_NORMAL:
-		train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
+		train_images_list, train_labels_list, test_images_list, test_labels_list = data_processing.get_train_data(data_dir)	
 		define.log("We got %d images for training, %d images for test." % (len(train_images_list), len(test_images_list)))
 
 		train_data_list = log_dir + '/train_list.csv'
@@ -297,7 +297,7 @@ def main(_):
 
 		trainning_and_verify(train_images_list, train_labels_list, test_images_list, test_labels_list)
 	elif ttype == define.TYPE_GB:
-		train_images_list, train_labels_list, verify_images_list, verify_labels_list = data_processing.get_train_data_from_kaggle_dataset(data_dir)	
+		train_images_list, train_labels_list, verify_images_list, verify_labels_list = data_processing.get_train_data(data_dir)	
 		test_images_list = data_processing.get_test_data_from_kaggle_dataset(define.DATA_DIR)
 		define.log("We got %d images for training, %d images for verify, %d images for test." % (len(train_images_list), len(verify_images_list), len(test_images_list)))
 
